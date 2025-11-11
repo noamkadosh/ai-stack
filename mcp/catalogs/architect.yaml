@@ -1,0 +1,19 @@
+version: 2
+name: architect
+displayName: Architect Agent Catalog
+registry:
+  memory:
+    description: "Persistent memory and knowledge graph"
+    title: "Memory MCP"
+    type: "server"
+    image: "mcp/memory"
+  context7:
+    description: "Up-to-date documentation"
+    title: "Context7"
+    type: "server"
+    image: "mcp/context7"
+  sequentialthinking:
+    description: "Structured step-by-step reasoning"
+    title: "Sequential Thinking"
+    type: "server"
+    image: "mcp/sequentialthinking"

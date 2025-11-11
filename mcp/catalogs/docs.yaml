@@ -1,0 +1,17 @@
+version: 2
+name: docs
+displayName: Documentation Catalog
+registry:
+  obsidian:
+    description: "Knowledge management"
+    title: "Obsidian"
+    type: "server"
+    image: "mcp/obsidian"
+    env:
+      - name: OBSIDIAN_VAULT_PATH
+        value: ""
+  code-index-mcp:
+    description: "Documentation indexing"
+    title: "Code Index"
+    type: "server"
+    image: "local/code-index-mcp:latest"

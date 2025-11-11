@@ -1,0 +1,17 @@
+version: 2
+name: database
+displayName: Database Catalog
+registry:
+  code-index-mcp:
+    description: "Schema and migration indexing"
+    title: "Code Index"
+    type: "server"
+    image: "local/code-index-mcp:latest"
+  github-official:
+    description: "Schema version control"
+    title: "GitHub"
+    type: "server"
+    image: "mcp/github-official"
+    env:
+      - name: GITHUB_PERSONAL_ACCESS_TOKEN
+        value: ""

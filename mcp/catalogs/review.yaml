@@ -1,0 +1,17 @@
+version: 2
+name: review
+displayName: Code Review Catalog
+registry:
+  github-official:
+    description: "Pull request reviews"
+    title: "GitHub"
+    type: "server"
+    image: "mcp/github-official"
+    env:
+      - name: GITHUB_PERSONAL_ACCESS_TOKEN
+        value: ""
+  code-index-mcp:
+    description: "Code context for reviews"
+    title: "Code Index"
+    type: "server"
+    image: "local/code-index-mcp:latest"

@@ -1,0 +1,22 @@
+version: 2
+name: backend
+displayName: Backend Development Catalog
+registry:
+  docker:
+    description: "Container management"
+    title: "Docker MCP"
+    type: "server"
+    image: "mcp/docker"
+  code-index-mcp:
+    description: "Backend code indexing and search"
+    title: "Code Index"
+    type: "server"
+    image: "local/code-index-mcp:latest"
+  github-official:
+    description: "GitHub repository operations"
+    title: "GitHub"
+    type: "server"
+    image: "mcp/github-official"
+    env:
+      - name: GITHUB_PERSONAL_ACCESS_TOKEN
+        value: ""

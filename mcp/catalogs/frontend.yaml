@@ -1,0 +1,22 @@
+version: 2
+name: frontend
+displayName: Frontend Development Catalog
+registry:
+  playwright:
+    description: "Browser testing and automation"
+    title: "Playwright"
+    type: "server"
+    image: "mcp/playwright"
+  code-index-mcp:
+    description: "Frontend code indexing and search"
+    title: "Code Index"
+    type: "server"
+    image: "local/code-index-mcp:latest"
+  github-official:
+    description: "GitHub repository operations"
+    title: "GitHub"
+    type: "server"
+    image: "mcp/github-official"
+    env:
+      - name: GITHUB_PERSONAL_ACCESS_TOKEN
+        value: ""

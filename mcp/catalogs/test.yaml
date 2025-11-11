@@ -1,0 +1,14 @@
+version: 2
+name: test
+displayName: Testing Catalog
+registry:
+  playwright:
+    description: "E2E browser testing"
+    title: "Playwright"
+    type: "server"
+    image: "mcp/playwright"
+  code-index-mcp:
+    description: "Test code indexing"
+    title: "Code Index"
+    type: "server"
+    image: "local/code-index-mcp:latest"
