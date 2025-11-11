@@ -1,553 +1,368 @@
-# OpenCode Agent System Setup
+# AI Stack
 
-Complete agent system for OpenCode with specialized subagents, custom commands, and MCP server integrations.
+Portable multi-agent AI development infrastructure with Docker MCP Gateway orchestration.
 
-## 📋 Overview
+## Overview
 
-This setup provides a comprehensive 2-tier agent architecture for software development:
+Production-ready MCP (Model Context Protocol) infrastructure supporting multiple AI clients with:
 
-**Tier 1:** Built-in Build and Plan agents for routine tasks  
-**Tier 2:** Specialized subagents for domain-specific work
+- **Agent isolation** - Separate tool catalogs per agent domain
+- **Docker-based** - Containerized MCP servers with security controls
+- **Multi-client** - Works with OpenCode, Claude Code, Cursor, etc.
+- **Stow-managed** - Declarative config deployment via GNU Stow
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                  Tier 1 Agents                       │
-│  ┌─────────────────┐  ┌─────────────────────────┐  │
-│  │  Build Agent    │  │    Plan Agent           │  │
-│  │  (Modify Code)  │  │    (Read-only)          │  │
-│  └─────────────────┘  └─────────────────────────┘  │
-└─────────────────────────────────────────────────────┘
-                      ↓ escalate
-┌─────────────────────────────────────────────────────┐
-│              Tier 2 Subagents                        │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐            │
-│  │ Frontend │ │ Backend  │ │   Test   │            │
-│  │          │ │          │ │  Expert  │            │
-│  └──────────┘ └──────────┘ └──────────┘            │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐            │
-│  │ Database │ │  Infra   │ │ Security │            │
-│  │          │ │          │ │          │            │
-│  └──────────┘ └──────────┘ └──────────┘            │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐            │
-│  │   Docs   │ │ Reviewer │ │ Debugger │            │
-│  │          │ │          │ │          │            │
-│  └──────────┘ └──────────┘ └──────────┘            │
-│  ┌──────────────────────────────────────┐          │
-│  │         Architect                     │          │
-│  │  (System Design & Strategy)          │          │
-│  └──────────────────────────────────────┘          │
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                  AI Client (OpenCode, etc.)              │
+└─────────────────────────┬───────────────────────────────┘
+                          │
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│              10 Gateway Instances (8000-8009)            │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐  │
+│  │Supervisor│ │ Frontend │ │ Backend  │ │   Test   │  │
+│  │   :8000  │ │   :8001  │ │   :8002  │ │   :8003  │  │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘  │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐  │
+│  │  Infra   │ │ Database │ │   Docs   │ │  Review  │  │
+│  │   :8004  │ │   :8005  │ │   :8006  │ │   :8007  │  │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘  │
+│  ┌──────────┐ ┌──────────┐                             │
+│  │ Debugger │ │ Security │                             │
+│  │   :8008  │ │   :8009  │                             │
+│  └──────────┘ └──────────┘                             │
+└─────────────────────────┬───────────────────────────────┘
+                          │
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│           MCP Servers (Docker Containers)                │
+│  • GitHub Official    • Playwright    • Docker          │
+│  • Memory MCP        • AWS           • Context7        │
+│  • Code Index MCP    • Obsidian      • Sequential      │
+│  • Desktop Commander • Ref Tools                        │
+└─────────────────────────────────────────────────────────┘
 ```
 
-## 📦 What's Included
+## Repository Structure
 
-### Agents (10 Total)
+```
+ai-stack/
+├── clients/                    # Client-specific configs
+│   ├── opencode/              # → ~/.config/opencode/ (via stow)
+│   │   ├── agent/             # 10 specialized agents
+│   │   ├── command/           # 8 custom commands
+│   │   ├── opencode.json      # MCP gateway connections
+│   │   ├── AGENTS.md          # Tech stack & standards
+│   │   └── docs/
+│   └── claude-code/           # → ~/.claude/ (future)
+│
+├── mcp/                       # Portable MCP infrastructure
+│   ├── docker/                # Custom MCP servers
+│   │   └── code-index-mcp/    # Submodule
+│   ├── catalogs/              # 10 agent-specific catalogs
+│   │   ├── supervisor-catalog.yaml
+│   │   ├── frontend-catalog.yaml
+│   │   ├── backend-catalog.yaml
+│   │   ├── test-catalog.yaml
+│   │   ├── infra-catalog.yaml
+│   │   ├── database-catalog.yaml
+│   │   ├── docs-catalog.yaml
+│   │   ├── review-catalog.yaml
+│   │   ├── debugger-catalog.yaml
+│   │   └── security-catalog.yaml
+│   ├── scripts/               # Gateway management
+│   │   ├── start-gateways.sh
+│   │   ├── stop-gateways.sh
+│   │   ├── gateway-status.sh
+│   │   └── test-gateway.sh
+│   └── logs/                  # Runtime logs (gitignored)
+│
+├── README.md                  # This file
+├── SETUP.md                   # Detailed setup guide
+└── .gitignore
+```
 
-**Tier 1 (Primary):**
-- `build` - Default agent with full tools
-- `plan` - Read-only analysis agent
+## Features
 
-**Tier 2 (Subagents):**
-- `@frontend` - React, NextJS, TypeScript, Storybook
-- `@backend` - NestJS, Node, REST API, GraphQL
-- `@test-expert` - Jest, Vitest, Playwright, Storybook
-- `@database` - PostgreSQL schema, queries, optimization
-- `@infrastructure` - Docker, AWS, Nix, CI/CD
-- `@security` - Vulnerability auditing, best practices
-- `@documentation` - Technical docs, API docs, guides
-- `@code-reviewer` - Code quality, best practices review
-- `@debugger` - Troubleshooting, root cause analysis
-- `@architect` - System design, architectural decisions
+### 🎯 Agent Specialization
 
-### Custom Commands (9 Total)
+- Each agent sees only relevant tools (optimized context windows)
+- 10 domain-specific catalogs: supervisor, frontend, backend, test, infra, database, docs, review, debugger, security
+- Prevents tool proliferation and context pollution
 
-- `/component` - Generate React component
-- `/hook` - Generate custom React hook
-- `/endpoint` - Create API endpoint
-- `/test` - Generate unit tests
-- `/e2e` - Generate E2E tests
-- `/review` - Perform code review
-- `/debug` - Debug an issue
-- `/performance` - Analyze performance
+### 🐳 Docker MCP Gateway
 
-### Global Instructions
+- Isolated containers with security restrictions (1 CPU, 2GB RAM)
+- Streaming transport for multi-client support (ports 8000-8009)
+- Centralized secrets management
+- Built-in logging and call tracing
 
-- `AGENTS.md` - Tech stack, code standards, security guidelines
-- Comprehensive instructions for all agents
-- Escalation procedures
-- File organization standards
+### 🔧 Custom MCP Servers
 
-### MCP Servers
+- **Code Index MCP** - Code indexing and search across 7 agent domains
+- Easily extensible with additional custom servers
 
-**Universal:**
-- Git operations
-- NPM package search
+### 📦 Client Agnostic
 
-**Optional (Enable as needed):**
-- GitHub API
-- PostgreSQL
-- Docker
-- AWS
-- Playwright
-- Obsidian
-- Context7 (library docs)
+- Portable `mcp/` infrastructure works with any MCP client
+- Client configs in `clients/` directory (OpenCode, Claude Code, etc.)
+- Stow-based deployment for clean symlink management
 
-## 🚀 Installation
+## Quick Start
 
 ### Prerequisites
 
-- OpenCode installed ([installation guide](https://opencode.ai/docs))
-- Node.js 18+ for MCP servers
-- Git configured
+```bash
+# Required
+docker --version          # Docker Desktop with MCP Toolkit enabled
+docker mcp --version      # Docker MCP CLI plugin
+npm install -g supergateway  # MCP transport adapter
 
-### Step 1: Copy Configuration Files
+# Optional (per client)
+opencode --version        # For OpenCode
+claude --version          # For Claude Code
+```
+
+### Installation
 
 ```bash
-# Navigate to your OpenCode config directory
-cd ~/.config/opencode
+# Clone as dotfiles submodule
+cd ~/dotfiles
+git submodule add <repo-url> ai-stack
+cd ai-stack
+git submodule update --init --recursive
 
-# Copy all files from this setup
-cp -r /path/to/opencode-setup/* .
+# Build custom MCP servers
+cd mcp/docker/code-index-mcp
+docker build -t local/code-index-mcp:latest .
 
-# Your directory structure should look like:
-# ~/.config/opencode/
-# ├── AGENTS.md
-# ├── opencode.json
-# ├── agent/
-# │   ├── frontend.md
-# │   ├── backend.md
-# │   ├── test-expert.md
-# │   ├── database.md
-# │   ├── infrastructure.md
-# │   ├── security.md
-# │   ├── documentation.md
-# │   ├── code-reviewer.md
-# │   ├── debugger.md
-# │   └── architect.md
-# ├── command/
-# │   ├── component.md
-# │   ├── hook.md
-# │   ├── endpoint.md
-# │   ├── test.md
-# │   ├── e2e.md
-# │   ├── review.md
-# │   ├── debug.md
-# │   └── performance.md
-# └── docs/
-#     └── MCP_SERVERS.md
+# Import catalogs
+cd ../catalogs
+for catalog in *.yaml; do
+  docker mcp catalog import "$catalog"
+done
+
+# Configure secrets
+docker mcp secret set github-official GITHUB_PERSONAL_ACCESS_TOKEN "ghp_YOUR_TOKEN"
+
+# Start all gateways
+cd ../scripts
+./start-gateways.sh
+
+# Install OpenCode config
+cd ~/dotfiles/ai-stack/clients
+stow opencode
+
+# Verify
+cd ~/dotfiles/ai-stack/mcp/scripts
+./gateway-status.sh
 ```
 
-### Step 2: Merge Your Existing Config
+See [SETUP.md](SETUP.md) for detailed phase-by-phase instructions.
 
-If you have an existing `opencode.json`:
+## Usage
+
+### Gateway Management
 
 ```bash
-# Backup your current config
-cp ~/.config/opencode/opencode.json ~/.config/opencode/opencode.json.backup
+cd ~/dotfiles/ai-stack/mcp/scripts
 
-# Manually merge or replace
-# The provided opencode.json includes:
-# - Your existing settings (model, theme, share)
-# - Agent definitions
-# - MCP server configurations
+# Start all gateways
+./start-gateways.sh
+
+# Check status
+./gateway-status.sh
+
+# Stop all gateways
+./stop-gateways.sh
+
+# Test individual gateway
+./test-gateway.sh 8000
 ```
 
-### Step 3: Set Up Environment Variables
+### Client Configuration
 
-Create `~/.config/opencode/.env`:
+**OpenCode** connects via `supergateway` (stdio → streaming):
 
-```bash
-# GitHub (for PR/issue management)
-export GITHUB_TOKEN="ghp_your_token_here"
-
-# Database (enable when needed)
-export DATABASE_URL="postgresql://user:password@localhost:5432/dbname"
-
-# AWS (enable when needed)
-export AWS_REGION="us-east-1"
-export AWS_ACCESS_KEY_ID="your_key"
-export AWS_SECRET_ACCESS_KEY="your_secret"
-
-# Obsidian (enable when needed)
-export OBSIDIAN_VAULT_PATH="~/Documents/Obsidian/MyVault"
-
-# Context7 (optional - get API key from context7.com)
-export CONTEXT7_API_KEY="your_key"
-```
-
-Load the environment:
-```bash
-# Add to your shell profile (~/.bashrc, ~/.zshrc)
-source ~/.config/opencode/.env
-```
-
-### Step 4: Test Installation
-
-```bash
-# Start OpenCode in a project
-cd ~/your-project
-opencode
-
-# Test agents are loaded
-# Press Tab to see build/plan agents
-# Type @frontend to see subagent is available
-
-# Test commands
-/help
-# You should see custom commands listed
-
-# Initialize project
-/init
-# This creates project-specific AGENTS.md
-```
-
-## 📖 Usage Guide
-
-### Using Tier 1 Agents
-
-**Build Agent (Default):**
-```
-Make the submit button primary color
-```
-
-**Plan Agent (Read-only):**
-```
-Tab  # Switch to Plan agent
-How should I implement user authentication?
-```
-
-### Using Tier 2 Subagents
-
-**Manual Invocation:**
-```
-@frontend Create a loading spinner component
-@backend Add rate limiting to the API
-@test-expert Write tests for the UserService
-@database Optimize the posts query
-@security Review authentication implementation
-@architect Design a caching strategy
-```
-
-**Automatic Escalation:**
-
-Agents automatically invoke specialist subagents when needed:
-
-```
-User: Fix the slow database query in user service
-Build Agent: [Invokes @database subagent]
-@database: [Analyzes query, adds index, optimizes]
-```
-
-### Using Custom Commands
-
-**Component Generation:**
-```
-/component Button primary secondary with loading state
-```
-
-**API Endpoint:**
-```
-/endpoint posts with CRUD operations
-```
-
-**Testing:**
-```
-/test @src/utils/validation.ts
-/e2e user login flow
-```
-
-**Code Review:**
-```
-/review @src/services/user.service.ts
-```
-
-**Debugging:**
-```
-/debug TypeError: Cannot read property 'id' of undefined in user controller
-```
-
-**Performance:**
-```
-/performance @src/components/Dashboard.tsx slow rendering
-```
-
-### MCP Server Management
-
-**Enable for Current Session:**
-```bash
-# Edit opencode.json
-{
-  "mcp": {
-    "postgres": {
-      "enabled": true  # Change to true
-    }
-  }
-}
-```
-
-**Project-Specific MCP:**
-
-Create `.opencode/opencode.json` in your project:
 ```json
 {
   "mcp": {
-    "postgres": {
-      "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-postgres", "postgresql://localhost:5432/myproject"],
-      "enabled": true
+    "frontend-gateway": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "supergateway",
+        "--streamableHttp",
+        "http://localhost:8001/mcp",
+        "--outputTransport",
+        "stdio"
+      ]
     }
   }
 }
 ```
 
-## 🎯 Common Workflows
+**Claude Code** (future) uses same pattern in `~/.claude/.mcp.json`
 
-### Frontend Development
-
-```bash
-# 1. Create component
-/component UserProfile with avatar, name, bio
-
-# 2. Add tests
-/test @components/UserProfile.tsx
-
-# 3. Create Storybook story
-# (automatically created by /component)
-
-# 4. Review
-/review @components/UserProfile.tsx
-```
-
-### Backend Development
+### Updating
 
 ```bash
-# 1. Create endpoint
-/endpoint users with authentication
+# Update code-index-mcp
+cd ~/dotfiles/ai-stack/mcp/docker/code-index-mcp
+git pull origin main
+docker build -t local/code-index-mcp:latest .
 
-# 2. Add database migration
-@database Create users table with email, password, timestamps
+# Update catalog
+cd ../../catalogs
+vim frontend-catalog.yaml
+docker mcp catalog import frontend-catalog.yaml
 
-# 3. Write tests
-/test @users/users.service.ts
+# Restart affected gateways
+cd ../scripts
+./stop-gateways.sh
+./start-gateways.sh
 
-# 4. Review security
-@security Review user authentication in @users/
+# Commit changes
+cd ~/dotfiles/ai-stack
+git add .
+git commit -m "Update frontend catalog"
+git push
 ```
 
-### Full-Stack Feature
+## Agent-Catalog Mapping
+
+| Agent          | Port | Catalog            | MCP Servers                           |
+| -------------- | ---- | ------------------ | ------------------------------------- |
+| Supervisor     | 8000 | supervisor-catalog | Memory, Context7, Sequential Thinking |
+| Frontend       | 8001 | frontend-catalog   | Playwright, Code Index, Browser       |
+| Backend        | 8002 | backend-catalog    | Docker, Code Index, GitHub            |
+| Test Expert    | 8003 | test-catalog       | Playwright, Code Index                |
+| Infrastructure | 8004 | infra-catalog      | Docker, AWS, Desktop Commander        |
+| Database       | 8005 | database-catalog   | Code Index, GitHub                    |
+| Documentation  | 8006 | docs-catalog       | Obsidian, Code Index                  |
+| Code Reviewer  | 8007 | review-catalog     | GitHub, Code Index                    |
+| Debugger       | 8008 | debugger-catalog   | Code Index, Desktop Commander, GitHub |
+| Security       | 8009 | security-catalog   | GitHub, Code Index                    |
+
+## Customization
+
+### Add New Agent Domain
 
 ```bash
-# 1. Plan with architect
-@architect Design a notification system with real-time updates
+# 1. Create catalog
+cd ~/dotfiles/ai-stack/mcp/catalogs
+cat > my-agent-catalog.yaml << 'EOF'
+version: 2
+name: my-agent-catalog
+displayName: My Agent Catalog
+registry:
+  # Add MCP servers here
+EOF
 
-# 2. Backend implementation
-@backend Implement notification API with WebSocket support
+# 2. Import catalog
+docker mcp catalog import my-agent-catalog.yaml
 
-# 3. Frontend implementation  
-@frontend Create notification UI component
+# 3. Add to start-gateways.sh
+vim ../scripts/start-gateways.sh
+# Add: ["my-agent-catalog"]=8010
 
-# 4. Testing
-@test-expert Create E2E tests for notifications
-
-# 5. Documentation
-@documentation Document notification API and usage
+# 4. Configure client to use port 8010
 ```
 
-### Bug Fixing
+### Add Custom MCP Server
 
 ```bash
-# 1. Debug the issue
-/debug User registration fails with 500 error
+# 1. Add as submodule
+cd ~/dotfiles/ai-stack/mcp/docker
+git submodule add <repo-url> my-mcp-server
 
-# 2. Implement fix
-# (Build agent or specific subagent)
+# 2. Build
+cd my-mcp-server
+docker build -t local/my-mcp-server:latest .
 
-# 3. Add regression test
-@test-expert Add test to prevent this bug
+# 3. Add to catalog
+cd ../../catalogs
+vim my-agent-catalog.yaml
+# Add server with image: local/my-mcp-server:latest
 
-# 4. Verify
-/review @src/auth/register.ts
+# 4. Reimport
+docker mcp catalog import my-agent-catalog.yaml
 ```
 
-### Performance Optimization
+## Troubleshooting
+
+**Gateway won't start:**
 
 ```bash
-# 1. Analyze performance
-/performance @src/components/Dashboard.tsx
-
-# 2. Optimize database
-@database Add indexes for dashboard queries
-
-# 3. Optimize frontend
-@frontend Implement React.memo and code splitting
-
-# 4. Verify improvements
-# Run benchmarks, check bundle size
+lsof -i :8000  # Check port availability
+cat ~/dotfiles/ai-stack/mcp/logs/supervisor-catalog.log  # Check logs
+docker mcp catalog show supervisor-catalog  # Verify catalog
 ```
 
-## 🔧 Customization
-
-### Adding Your Own Agents
-
-Create `~/.config/opencode/agent/my-agent.md`:
-
-```markdown
----
-description: My custom agent
-mode: subagent
-model: claude-sonnet-4-5
-temperature: 0.2
-tools:
-  write: true
-  edit: true
----
-
-# My Custom Agent
-
-Specialized instructions here...
-```
-
-### Adding Custom Commands
-
-Create `~/.config/opencode/command/my-command.md`:
-
-```markdown
----
-description: My custom command
-agent: build
----
-
-Do something with $ARGUMENT_NAME
-
-Additional instructions...
-```
-
-### Modifying Global Instructions
-
-Edit `~/.config/opencode/AGENTS.md`:
-
-```markdown
-# Add your team's specific standards
-## Our API Conventions
-- Use snake_case for endpoints
-- Always return 200 with data wrapper
-...
-```
-
-### Project-Specific Instructions
-
-Create `.opencode/AGENTS.md` in your project:
-
-```markdown
-# Project-Specific Rules
-
-## This Project
-- Uses Prisma ORM
-- Styled with Tailwind
-- React Server Components only
-...
-```
-
-## 📊 Agent Capabilities Matrix
-
-| Agent | Write Code | Read Only | Bash | Domain |
-|-------|-----------|-----------|------|--------|
-| build | ✅ | ✅ | ✅ | General |
-| plan | ❌ | ✅ | ❌ | General |
-| @frontend | ✅ | ✅ | ✅ | React, Next, TS |
-| @backend | ✅ | ✅ | ✅ | NestJS, Node, API |
-| @test-expert | ✅ | ✅ | ✅ | Jest, Vitest, Playwright |
-| @database | ✅ | ✅ | ✅ | PostgreSQL |
-| @infrastructure | ✅ | ✅ | ✅ | Docker, AWS, Nix |
-| @security | ❌ | ✅ | Ask | Security auditing |
-| @documentation | ✅ | ✅ | ❌ | Technical writing |
-| @code-reviewer | ❌ | ✅ | Ask | Code quality |
-| @debugger | ✅ | ✅ | ✅ | Troubleshooting |
-| @architect | ✅ | ✅ | ✅ | System design |
-
-## 🐛 Troubleshooting
-
-### Agent Not Found
+**Client can't connect:**
 
 ```bash
-# Check agent files exist
-ls ~/.config/opencode/agent/
-
-# Verify file naming (must be .md)
-# Agent name = filename without .md
-# e.g., frontend.md creates @frontend agent
+npx -y supergateway --version  # Verify installed
+curl http://localhost:8000/mcp  # Test gateway
+ps aux | grep "docker mcp gateway.*8000"  # Verify running
 ```
 
-### Command Not Working
+**Custom image not found:**
 
 ```bash
-# Check command files
-ls ~/.config/opencode/command/
-
-# Use /help to see available commands
-
-# Check command syntax in markdown frontmatter
+docker images | grep local/  # List local images
+cd ~/dotfiles/ai-stack/mcp/docker/code-index-mcp
+docker build -t local/code-index-mcp:latest .  # Rebuild
 ```
 
-### MCP Server Not Starting
+## Performance
+
+- **Streaming transport latency:** ~5-10ms (negligible vs LLM inference)
+- **Gateway overhead:** <100MB RAM per instance
+- **Container startup:** ~2-3 seconds per MCP server
+- **Concurrent agents:** All 10 can run simultaneously
+
+## Security
+
+- ✅ Isolated Docker containers per MCP server
+- ✅ Granular permission controls (CPU/memory limits)
+- ✅ Secrets managed via Docker Desktop (not in env vars)
+- ✅ No browser session access (Browser MCP removed)
+- ✅ Local execution (no remote MCP servers)
+- ✅ Streaming transport (no HTTP endpoint exposure with stdio)
+
+## Submodules
+
+- `mcp/docker/code-index-mcp` - [johnhuang316/code-index-mcp](https://github.com/johnhuang316/code-index-mcp)
+
+**Initialize after cloning:**
 
 ```bash
-# Test server manually
-npx -y @modelcontextprotocol/server-git --version
-
-# Check environment variables
-echo $GITHUB_TOKEN
-
-# Enable debug logging
-DEBUG=* opencode
+git submodule update --init --recursive
 ```
 
-### High Token Usage
+## Philosophy
 
-```bash
-# Disable unused MCP servers
-# Edit opencode.json: "enabled": false
+**Project-agnostic** - No project-specific MCP servers (e.g., Storybook)  
+**Security-first** - No access to logged-in browser sessions  
+**Performance-optimized** - Minimal tool sets per agent  
+**Maintainable** - Upstream Dockerfiles, clear separation of concerns  
+**Portable** - Works across clients and machines
 
-# Use /compact to compress context
-/compact
+## Credits
 
-# Check which tools are enabled
-# Only enable what you need
-```
+Built on:
 
-## 📚 Additional Resources
+- [Docker MCP Gateway](https://github.com/docker/mcp-gateway)
+- [Model Context Protocol](https://modelcontextprotocol.io)
+- [OpenCode](https://opencode.ai) (primary client)
 
-- [OpenCode Documentation](https://opencode.ai/docs)
-- [MCP Server Guide](./docs/MCP_SERVERS.md)
-- [Agent Instructions Best Practices](https://opencode.ai/docs/agents)
-- [Custom Commands Guide](https://opencode.ai/docs/commands)
-
-## 🤝 Contributing
-
-Have improvements or additional agents? Create an issue or PR:
-
-1. Test your agent/command thoroughly
-2. Document usage and examples
-3. Follow existing patterns
-4. Update this README
-
-## 📝 License
+## License
 
 MIT - Use freely, modify as needed.
 
-## 🙏 Credits
-
-Created for efficient software development with OpenCode.
-
-Based on:
-- OpenCode documentation and best practices
-- Real-world multi-agent system patterns
-- Community MCP server implementations
-
 ---
 
-**Happy Coding! 🚀**
-
-For questions or issues, refer to [OpenCode Docs](https://opencode.ai/docs) or open an issue.
+**See [SETUP.md](SETUP.md) for detailed installation instructions.**
