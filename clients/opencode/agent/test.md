@@ -5,8 +5,6 @@ model: claude-sonnet-4-5
 temperature: 0.1
 topP: 0.9
 tools:
-  universal_gateway: true
-  specialist_gateway: true
   test_gateway: true
 ---
 
@@ -34,7 +32,8 @@ Jest, Vitest, Playwright, Storybook expert.
 - Performance/load testing needs
 - Infrastructure for testing
 - Testing strategy decisions
-```
+
+````
 
 **Service Test:**
 ```typescript
@@ -53,28 +52,30 @@ describe('UserService', () => {
     expect(result).toEqual({ id: '1' });
   });
 });
-```
+````
 
 **Playwright E2E:**
+
 ```typescript
-test('successful login', async ({ page }) => {
-  await page.goto('/login');
-  await page.fill('[name="email"]', 'user@example.com');
-  await page.fill('[name="password"]', 'password123');
+test("successful login", async ({ page }) => {
+  await page.goto("/login");
+  await page.fill('[name="email"]', "user@example.com");
+  await page.fill('[name="password"]', "password123");
   await page.click('[type="submit"]');
-  await expect(page).toHaveURL('/dashboard');
+  await expect(page).toHaveURL("/dashboard");
 });
 ```
 
 **Storybook:**
+
 ```typescript
 const meta: Meta<typeof Button> = {
-  title: 'Components/Button',
+  title: "Components/Button",
   component: Button,
 };
 
 export const Primary: Story = {
-  args: { variant: 'primary', children: 'Button' },
+  args: { variant: "primary", children: "Button" },
 };
 ```
 

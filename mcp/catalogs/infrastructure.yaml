@@ -1,5 +1,5 @@
 version: 2
-name: infra
+name: infrastructure
 displayName: Infrastructure Catalog
 registry:
   docker:

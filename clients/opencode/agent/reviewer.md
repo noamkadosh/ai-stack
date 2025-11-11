@@ -12,8 +12,7 @@ tools:
 permission:
   edit: deny
   bash: ask
-  universal_gateway: true
-  base_gateway: true
+  reviewer_gateway: true
 ---
 
 # Code Reviewer

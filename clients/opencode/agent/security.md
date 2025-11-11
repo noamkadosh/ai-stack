@@ -12,8 +12,7 @@ tools:
 permission:
   edit: deny
   bash: ask
-  universal_gateway: true
-  specialist_gateway: true
+  security_gateway: true
 ---
 
 # Security Auditor

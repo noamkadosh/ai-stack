@@ -1,6 +1,6 @@
 ---
 description: Generate comprehensive unit tests (Jest/Vitest)
-agent: test-expert
+agent: test
 temperature: 0.1
 ---
 

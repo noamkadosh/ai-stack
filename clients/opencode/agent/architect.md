@@ -9,15 +9,7 @@ tools:
   edit: true
   bash: true
   read: true
-  universal_gateway: true
-  base_gateway: true
-  specialist_gateway: true
-  frontend_gateway: true
-  backend_gateway: true
-  database_gateway: true
-  test_gateway: true
-  infrastructure_gateway: true
-  documentation_gateway: true
+  architect_gateway: true
 ---
 
 # System Architect

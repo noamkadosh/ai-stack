@@ -19,16 +19,7 @@
     "grep": true,
     "glob": true,
     "list": true,
-    "webfetch": true,
-    "universal_gateway": true,
-    "base_gateway": true,
-    "specialist_gateway": false,
-    "frontend_gateway": false,
-    "backend_gateway": false,
-    "database_gateway": false,
-    "test_gateway": false,
-    "infrastructure_gateway": false,
-    "documentation_gateway": false
+    "webfetch": true
   },
   "permission": {
     "edit": "allow",
@@ -102,7 +93,7 @@
     }
   },
   "mcp": {
-    "universal_gateway": {
+    "architect_gateway": {
       "type": "local",
       "command": [
         "docker",
@@ -111,50 +102,10 @@
         "run",
         "--secrets",
         "./.env",
-        "--servers",
-        "sequentialthinking"
-      ],
-      "enabled": true
-    },
-    "base_gateway": {
-      "type": "local",
-      "command": [
-        "docker",
-        "mcp",
-        "gateway",
-        "run",
-        "--secrets",
-        "./.env",
-        "--servers",
-        "github-official"
-      ],
-      "enabled": true
-    },
-    "specialist_gateway": {
-      "type": "local",
-      "command": [
-        "docker",
-        "mcp",
-        "gateway",
-        "run",
-        "--secrets",
-        "./.env",
-        "--servers",
-        "context7"
-      ],
-      "enabled": true
-    },
-    "frontend_gateway": {
-      "type": "local",
-      "command": [
-        "docker",
-        "mcp",
-        "gateway",
-        "run",
-        "--secrets",
-        "./.env",
-        "--servers",
-        "next-devtools-mcp"
+        "--catalog",
+        "architect.yaml",
+        "--transport",
+        "streaming"
       ],
       "enabled": true
     },
@@ -167,8 +118,26 @@
         "run",
         "--secrets",
         "./.env",
-        "--servers",
-        ""
+        "--catalog",
+        "backend.yaml",
+        "--transport",
+        "streaming"
+      ],
+      "enabled": true
+    },
+    "base_gateway": {
+      "type": "local",
+      "command": [
+        "docker",
+        "mcp",
+        "gateway",
+        "run",
+        "--secrets",
+        "./.env",
+        "--catalog",
+        "base.yaml",
+        "--transport",
+        "streaming"
       ],
       "enabled": true
     },
@@ -181,12 +150,14 @@
         "run",
         "--secrets",
         "./.env",
-        "--servers",
-        ""
+        "--catalog",
+        "database.yaml",
+        "--transport",
+        "streaming"
       ],
       "enabled": true
     },
-    "test_gateway": {
+    "debugger_gateway": {
       "type": "local",
       "command": [
         "docker",
@@ -195,22 +166,10 @@
         "run",
         "--secrets",
         "./.env",
-        "--servers",
-        "playwright"
-      ],
-      "enabled": true
-    },
-    "infrastructure_gateway": {
-      "type": "local",
-      "command": [
-        "docker",
-        "mcp",
-        "gateway",
-        "run",
-        "--secrets",
-        "./.env",
-        "--servers",
-        "aws-core-mcp-server,aws-documentation,docker"
+        "--catalog",
+        "debugger.yaml",
+        "--transport",
+        "streaming"
       ],
       "enabled": true
     },
@@ -223,8 +182,90 @@
         "run",
         "--secrets",
         "./.env",
-        "--servers",
-        "obsidian"
+        "--catalog",
+        "documentation.yaml",
+        "--transport",
+        "streaming"
+      ],
+      "enabled": true
+    },
+    "frontend_gateway": {
+      "type": "local",
+      "command": [
+        "docker",
+        "mcp",
+        "gateway",
+        "run",
+        "--secrets",
+        "./.env",
+        "--catalog",
+        "frontend.yaml",
+        "--transport",
+        "streaming"
+      ],
+      "enabled": true
+    },
+    "infrastructure_gateway": {
+      "type": "local",
+      "command": [
+        "docker",
+        "mcp",
+        "gateway",
+        "run",
+        "--secrets",
+        "./.env",
+        "--catalog",
+        "infrastructure.yaml",
+        "--transport",
+        "streaming"
+      ],
+      "enabled": true
+    },
+    "reviewer_gateway": {
+      "type": "local",
+      "command": [
+        "docker",
+        "mcp",
+        "gateway",
+        "run",
+        "--secrets",
+        "./.env",
+        "--catalog",
+        "reviewer.yaml",
+        "--transport",
+        "streaming"
+      ],
+      "enabled": true
+    },
+    "security_gateway": {
+      "type": "local",
+      "command": [
+        "docker",
+        "mcp",
+        "gateway",
+        "run",
+        "--secrets",
+        "./.env",
+        "--catalog",
+        "security.yaml",
+        "--transport",
+        "streaming"
+      ],
+      "enabled": true
+    },
+    "test_gateway": {
+      "type": "local",
+      "command": [
+        "docker",
+        "mcp",
+        "gateway",
+        "run",
+        "--secrets",
+        "./.env",
+        "--catalog",
+        "test.yaml",
+        "--transport",
+        "streaming"
       ],
       "enabled": true
     }

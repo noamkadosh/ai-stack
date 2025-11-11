@@ -144,20 +144,9 @@ for catalog in *.yaml; do
   docker mcp catalog import "$catalog"
 done
 
-# Configure secrets
-docker mcp secret set github-official GITHUB_PERSONAL_ACCESS_TOKEN "ghp_YOUR_TOKEN"
-
-# Start all gateways
-cd ../scripts
-./start-gateways.sh
-
 # Install OpenCode config
-cd ~/dotfiles/ai-stack/clients
-stow opencode
-
-# Verify
-cd ~/dotfiles/ai-stack/mcp/scripts
-./gateway-status.sh
+cd ~/dotfiles/ai/clients
+stow -t ~/.config/opencode opencode
 ```
 
 See [SETUP.md](SETUP.md) for detailed phase-by-phase instructions.

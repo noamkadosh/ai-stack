@@ -9,8 +9,7 @@ tools:
   edit: true
   bash: true
   read: true
-  universal_gateway: true
-  specialist_gateway: true
+  debugger_gateway: true
 ---
 
 # Debugger Specialist

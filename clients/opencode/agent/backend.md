@@ -5,8 +5,6 @@ model: claude-sonnet-4-5
 temperature: 0.2
 topP: 0.95
 tools:
-  universal_gateway: true
-  specialist_gateway: true
   backend_gateway: true
 ---
 

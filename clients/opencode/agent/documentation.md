@@ -9,8 +9,6 @@ tools:
   edit: true
   bash: false
   read: true
-  universal_gateway: true
-  specialist_gateway: true
   documentation_gateway: true
 ---
 

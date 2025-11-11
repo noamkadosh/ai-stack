@@ -9,8 +9,6 @@ tools:
   edit: true
   bash: true
   read: true
-  universal_gateway: true
-  specialist_gateway: true
   infrastructure_gateway: true
 ---
 

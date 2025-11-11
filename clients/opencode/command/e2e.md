@@ -1,6 +1,6 @@
 ---
 description: Generate Playwright E2E tests for complete user flows
-agent: test-expert
+agent: test
 temperature: 0.1
 ---
 

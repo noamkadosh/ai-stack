@@ -1,5 +1,5 @@
 version: 2
-name: docs
+name: documentation
 displayName: Documentation Catalog
 registry:
   obsidian:
