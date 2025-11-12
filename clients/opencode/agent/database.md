@@ -1,7 +1,7 @@
 ---
 description: Database specialist - PostgreSQL schema, queries, optimization
 mode: subagent
-model: claude-sonnet-4-5
+model: anthropic/claude-sonnet-4-5
 temperature: 0.1
 topP: 0.9
 tools:

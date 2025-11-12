@@ -1,7 +1,7 @@
 ---
 description: Infrastructure specialist - Docker, AWS, Nix, CI/CD
 mode: subagent
-model: claude-sonnet-4-5
+model: anthropic/claude-sonnet-4-5
 temperature: 0.2
 topP: 0.95
 tools:

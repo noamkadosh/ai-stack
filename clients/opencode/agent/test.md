@@ -1,7 +1,7 @@
 ---
 description: Testing specialist - Jest, Vitest, Playwright, Storybook
 mode: subagent
-model: claude-sonnet-4-5
+model: anthropic/claude-sonnet-4-5
 temperature: 0.1
 topP: 0.9
 tools:
