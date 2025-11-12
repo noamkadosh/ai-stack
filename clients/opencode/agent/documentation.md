@@ -9,7 +9,6 @@ tools:
   edit: true
   bash: false
   read: true
-  MCP_DOCKER: true
 ---
 
 # Documentation Specialist

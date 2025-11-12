@@ -19,7 +19,8 @@
     "grep": true,
     "glob": true,
     "list": true,
-    "webfetch": true
+    "webfetch": true,
+    "MCP_DOCKER": true
   },
   "permission": {
     "edit": "allow",
@@ -53,8 +54,7 @@
       "tools": {
         "write": true,
         "edit": true,
-        "bash": true,
-        "MCP_DOCKER": true
+        "bash": true
       },
       "permission": {
         "bash": { "git push*": "ask", "rm -rf*": "deny", "npm publish*": "ask" }
@@ -69,8 +69,7 @@
       "tools": {
         "write": false,
         "edit": false,
-        "bash": false,
-        "MCP_DOCKER": true
+        "bash": false
       }
     }
   },
@@ -93,19 +92,7 @@
   "mcp": {
     "MCP_DOCKER": {
       "type": "local",
-      "command": [
-        "docker",
-        "mcp",
-        "gateway",
-        "run",
-        "--secrets",
-        "./.env",
-        "--catalog",
-        "mcp-servers",
-        "--transport",
-        "streaming"
-      ],
-      "enabled": true
+      "command": ["docker", "mcp", "gateway", "run", "--catalog", "mcp-servers"]
     }
   }
 }

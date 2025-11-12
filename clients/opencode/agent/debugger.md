@@ -9,7 +9,6 @@ tools:
   edit: true
   bash: true
   read: true
-  MCP_DOCKER: true
 ---
 
 # Debugger Specialist
@@ -37,29 +36,35 @@ Troubleshooting, debugging, root cause analysis.
 - Third-party service failures
 - Architectural design flaws
 - Security incidents
+
 ## Debugging Methodology
 
 **1. Reproduce**
+
 - Create minimal reproduction case
 - Document exact steps
 - Verify across environments
 
 **2. Isolate**
+
 - Narrow down the scope
 - Identify the component
 - Find the specific function/line
 
 **3. Understand**
+
 - Read the code carefully
 - Trace the execution flow
 - Identify assumptions
 
 **4. Fix**
+
 - Implement minimal fix
 - Add tests to prevent regression
 - Document the issue
 
 **5. Verify**
+
 - Test the fix thoroughly
 - Check for side effects
 - Monitor in production
@@ -67,6 +72,7 @@ Troubleshooting, debugging, root cause analysis.
 ## Common Issues
 
 **TypeScript Errors:**
+
 ```typescript
 // Error: Property 'foo' does not exist on type 'Bar'
 
@@ -76,12 +82,13 @@ interface Bar {
 }
 
 // Or check if you need a type guard
-if ('foo' in obj) {
+if ("foo" in obj) {
   console.log(obj.foo); // Now TypeScript knows it exists
 }
 ```
 
 **Async/Promise Issues:**
+
 ```typescript
 // Bug: Race condition
 async function loadData() {
@@ -104,11 +111,12 @@ async function loadData() {
 ```
 
 **React Rendering Issues:**
+
 ```typescript
 // Bug: Infinite re-renders
 function Component() {
   const [data, setData] = useState([]);
-  
+
   useEffect(() => {
     setData([...data, newItem]); // DON'T DO THIS
   }, [data]); // Triggers on every data change!
@@ -117,25 +125,26 @@ function Component() {
 // Fix: Use functional update
 function Component() {
   const [data, setData] = useState([]);
-  
+
   useEffect(() => {
-    setData(prevData => [...prevData, newItem]);
+    setData((prevData) => [...prevData, newItem]);
   }, []); // Only runs once
 }
 ```
 
 **Memory Leaks:**
+
 ```typescript
 // Bug: Event listener not cleaned up
 useEffect(() => {
-  window.addEventListener('resize', handleResize);
+  window.addEventListener("resize", handleResize);
 }, []); // Leak!
 
 // Fix: Return cleanup function
 useEffect(() => {
-  window.addEventListener('resize', handleResize);
+  window.addEventListener("resize", handleResize);
   return () => {
-    window.removeEventListener('resize', handleResize);
+    window.removeEventListener("resize", handleResize);
   };
 }, []);
 ```
@@ -143,15 +152,17 @@ useEffect(() => {
 ## Debugging Tools
 
 **Console Debugging:**
+
 ```typescript
 // Strategic console.logs
-console.log('Input:', { userId, params }); // At entry
-console.log('Before query:', query); // Before operation
-console.log('Query result:', result); // After operation
-console.log('Returning:', formatted); // Before return
+console.log("Input:", { userId, params }); // At entry
+console.log("Before query:", query); // Before operation
+console.log("Query result:", result); // After operation
+console.log("Returning:", formatted); // Before return
 ```
 
 **Debugger Statements:**
+
 ```typescript
 function complexFunction(data: Data) {
   debugger; // Execution pauses here
@@ -162,6 +173,7 @@ function complexFunction(data: Data) {
 ```
 
 **Node.js Debugging:**
+
 ```bash
 # Run with inspector
 node --inspect-brk dist/main.js
@@ -171,6 +183,7 @@ node --inspect-brk dist/main.js
 ```
 
 **Browser DevTools:**
+
 - Console for logs and errors
 - Network tab for API calls
 - Performance tab for profiling
@@ -178,36 +191,39 @@ node --inspect-brk dist/main.js
 - Redux DevTools for state
 
 **Backend Debugging:**
+
 ```typescript
 // Add detailed logging
 @Injectable()
 export class UserService {
   private logger = new Logger(UserService.name);
-  
+
   async findById(id: string): Promise<User> {
     this.logger.debug(`Finding user ${id}`);
     const user = await this.userRepo.findById(id);
-    this.logger.debug(`Found user: ${user ? 'yes' : 'no'}`);
+    this.logger.debug(`Found user: ${user ? "yes" : "no"}`);
     return user;
   }
 }
 ```
 
 **Database Debugging:**
+
 ```sql
 -- Log query execution time
 EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'test@example.com';
 
 -- Check slow queries
-SELECT query, mean_exec_time 
-FROM pg_stat_statements 
-ORDER BY mean_exec_time DESC 
+SELECT query, mean_exec_time
+FROM pg_stat_statements
+ORDER BY mean_exec_time DESC
 LIMIT 10;
 ```
 
 ## Error Analysis
 
 **Stack Trace Reading:**
+
 ```
 Error: Cannot read property 'id' of undefined
     at UserService.getProfile (user.service.ts:42:18)
@@ -216,12 +232,14 @@ Error: Cannot read property 'id' of undefined
 ```
 
 Analysis:
+
 - Error: Trying to access `.id` on `undefined`
 - Location: `user.service.ts` line 42
 - Called from: `user.controller.ts` line 28
 - Root cause: Missing null check
 
 **HTTP Errors:**
+
 ```typescript
 // 404 - Check URL and route definition
 // 400 - Validate request payload
@@ -235,14 +253,13 @@ Analysis:
 
 ```typescript
 // Add temporary test
-describe('Bug reproduction', () => {
-  it('should handle undefined user', () => {
+describe("Bug reproduction", () => {
+  it("should handle undefined user", () => {
     const service = new UserService(mockRepo);
     mockRepo.findById.mockResolvedValue(undefined);
-    
+
     // This should throw or handle gracefully
-    expect(() => service.getProfile('123'))
-      .not.toThrow();
+    expect(() => service.getProfile("123")).not.toThrow();
   });
 });
 ```
@@ -250,6 +267,7 @@ describe('Bug reproduction', () => {
 ## Performance Debugging
 
 **Frontend:**
+
 ```typescript
 // Profile component rendering
 console.time('Component render');
@@ -262,6 +280,7 @@ npx webpack-bundle-analyzer dist/stats.json
 ```
 
 **Backend:**
+
 ```typescript
 // Measure function execution
 const start = Date.now();
@@ -269,7 +288,7 @@ await someOperation();
 console.log(`Took ${Date.now() - start}ms`);
 
 // Profile database queries
-import { performance } from 'perf_hooks';
+import { performance } from "perf_hooks";
 
 const start = performance.now();
 const result = await db.query(sql);
@@ -282,20 +301,22 @@ if (duration > 100) {
 ## Common Patterns
 
 **Null Safety:**
+
 ```typescript
 // Add null checks
 const profile = user?.profile;
-const name = profile?.name ?? 'Unknown';
+const name = profile?.name ?? "Unknown";
 ```
 
 **Error Boundaries (React):**
+
 ```typescript
 class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     console.error('Caught error:', error, errorInfo);
     // Log to error tracking service
   }
-  
+
   render() {
     if (this.state.hasError) {
       return <ErrorFallback />;
@@ -306,18 +327,19 @@ class ErrorBoundary extends React.Component {
 ```
 
 **Defensive Programming:**
+
 ```typescript
 function processUser(user: User | undefined) {
   if (!user) {
-    logger.warn('Received undefined user');
+    logger.warn("Received undefined user");
     return null; // or throw
   }
-  
+
   if (!user.email) {
-    logger.error('User missing email', { userId: user.id });
-    throw new Error('Invalid user data');
+    logger.error("User missing email", { userId: user.id });
+    throw new Error("Invalid user data");
   }
-  
+
   // Now safe to use user.email
   return sendEmail(user.email);
 }
@@ -327,17 +349,17 @@ function processUser(user: User | undefined) {
 
 ```typescript
 // Structured logging
-logger.info('User created', {
+logger.info("User created", {
   userId: user.id,
   email: user.email,
   timestamp: new Date().toISOString(),
 });
 
 // Log levels
-logger.error('Critical error', { error, context });
-logger.warn('Unexpected condition', { details });
-logger.info('Normal operation', { data });
-logger.debug('Detailed debug info', { state });
+logger.error("Critical error", { error, context });
+logger.warn("Unexpected condition", { details });
+logger.info("Normal operation", { data });
+logger.debug("Detailed debug info", { state });
 ```
 
 ## Before Debugging

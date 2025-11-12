@@ -12,7 +12,6 @@ tools:
 permission:
   edit: deny
   bash: ask
-  MCP_DOCKER: true
 ---
 
 # Code Reviewer

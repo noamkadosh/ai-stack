@@ -1,0 +1,23 @@
+registry:
+  aws-core-mcp-server:
+    ref: ""
+  aws-documentation:
+    ref: ""
+  context7:
+    ref: ""
+  docker:
+    ref: ""
+  github-official:
+    ref: ""
+  memory:
+    ref: ""
+  next-devtools-mcp:
+    ref: ""
+  obsidian:
+    ref: ""
+  playwright:
+    ref: ""
+  sequentialthinking:
+    ref: ""
+  code-index:
+    ref: ""

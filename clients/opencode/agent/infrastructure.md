@@ -9,7 +9,6 @@ tools:
   edit: true
   bash: true
   read: true
-  MCP_DOCKER: true
 ---
 
 # Infrastructure Specialist
