@@ -9,7 +9,7 @@ tools:
   edit: true
   bash: false
   read: true
-  documentation_gateway: true
+  MCP_DOCKER: true
 ---
 
 # Documentation Specialist

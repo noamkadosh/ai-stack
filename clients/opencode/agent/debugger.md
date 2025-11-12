@@ -9,7 +9,7 @@ tools:
   edit: true
   bash: true
   read: true
-  debugger_gateway: true
+  MCP_DOCKER: true
 ---
 
 # Debugger Specialist

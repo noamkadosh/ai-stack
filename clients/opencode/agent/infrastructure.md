@@ -9,7 +9,7 @@ tools:
   edit: true
   bash: true
   read: true
-  infrastructure_gateway: true
+  MCP_DOCKER: true
 ---
 
 # Infrastructure Specialist

@@ -12,7 +12,7 @@ tools:
 permission:
   edit: deny
   bash: ask
-  reviewer_gateway: true
+  MCP_DOCKER: true
 ---
 
 # Code Reviewer

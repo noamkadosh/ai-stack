@@ -9,7 +9,7 @@ tools:
   edit: true
   bash: true
   read: true
-  architect_gateway: true
+  MCP_DOCKER: true
 ---
 
 # System Architect

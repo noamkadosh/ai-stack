@@ -12,7 +12,7 @@ tools:
 permission:
   edit: deny
   bash: ask
-  security_gateway: true
+  MCP_DOCKER: true
 ---
 
 # Security Auditor
