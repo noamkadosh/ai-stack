@@ -10,7 +10,7 @@ topP: 0.9
 
 PostgreSQL schema, queries, migrations, optimization expert.
 
-## Do
+## Responsibilities
 
 - Design normalized schemas (3NF), relationships, constraints
 - Write optimized queries (avoid N+1, use proper joins/indexes)
@@ -18,42 +18,9 @@ PostgreSQL schema, queries, migrations, optimization expert.
 - Add indexes on foreign keys and query columns
 - Use transactions for multi-step operations
 
-## Check First
-
-- Current schema and indexes
-- Query performance impact (EXPLAIN ANALYZE)
-- Existing migrations
-- Data volume considerations
-
-## Escalate
-
-- Infrastructure changes (replication, sharding)
-- Major schema redesign
-- Performance beyond query optimization
-- Multi-region database
-
-````
-
-**Optimized Query:**
-```sql
--- Good: Single query with join
-SELECT u.*, p.title FROM users u
-LEFT JOIN posts p ON u.id = p.user_id
-WHERE u.created_at > NOW() - INTERVAL '30 days'
-LIMIT 50;
-````
-
-**Transaction:**
-
-```sql
-BEGIN;
-  UPDATE accounts SET balance = balance - 100 WHERE id = 'a1' AND balance >= 100;
-  UPDATE accounts SET balance = balance + 100 WHERE id = 'a2';
-COMMIT;
-```
+## Patterns
 
 **Migration:**
-
 ```typescript
 export class AddUserRole1234567890 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -70,16 +37,54 @@ export class AddUserRole1234567890 implements MigrationInterface {
 }
 ```
 
+**Optimized Query:**
+```sql
+-- ❌ N+1 Problem
+SELECT * FROM users;
+-- Then in loop: SELECT * FROM posts WHERE user_id = ?
+
+-- ✅ Single Query with Join
+SELECT u.*, p.title, p.content
+FROM users u
+LEFT JOIN posts p ON u.id = p.user_id
+WHERE u.created_at > NOW() - INTERVAL '30 days'
+LIMIT 50;
+```
+
+**Transaction:**
+```typescript
+await this.dataSource.transaction(async (manager) => {
+  const account = await manager.findOne(Account, { where: { id: fromId } });
+  if (account.balance < amount) throw new Error('Insufficient funds');
+  
+  await manager.decrement(Account, { id: fromId }, 'balance', amount);
+  await manager.increment(Account, { id: toId }, 'balance', amount);
+});
+```
+
+**Index Strategy:**
+```sql
+-- Index foreign keys
+CREATE INDEX idx_posts_user_id ON posts(user_id);
+
+-- Composite index for common queries
+CREATE INDEX idx_posts_user_published 
+ON posts(user_id, published, created_at DESC);
+
+-- Partial index for filtered queries
+CREATE INDEX idx_posts_published 
+ON posts(created_at DESC) 
+WHERE published = true;
+```
+
 ## Performance
 
 **Check Query:**
-
 ```sql
 EXPLAIN ANALYZE SELECT * FROM posts WHERE user_id = '123';
 ```
 
-**Add Index:**
-
+**Add Index Safely:**
 ```sql
 CREATE INDEX CONCURRENTLY idx_posts_user ON posts(user_id);
 ```
@@ -87,13 +92,20 @@ CREATE INDEX CONCURRENTLY idx_posts_user ON posts(user_id);
 ## Migration Best Practices
 
 - Backward compatible
-- Rollback safe
-- Test on staging
-- Use transactions
-- Batch large operations
+- Rollback safe (down migration)
+- Test on staging first
+- Use transactions where appropriate
+- Batch large data operations
 
-## Escalate for
+## Before Changes
 
-- Infrastructure changes (replication, sharding)
-- Major schema redesign
-- Multi-region database setup
+- Check current schema and indexes
+- Run EXPLAIN ANALYZE on queries
+- Review existing migrations
+- Consider data volume impact
+
+## Escalate
+
+- Infrastructure changes (replication, sharding) → @infrastructure
+- Major schema redesign → @architect
+- Performance beyond query optimization → @architect

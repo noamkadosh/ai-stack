@@ -18,7 +18,7 @@ permission:
 
 Code quality, best practices, potential issues.
 
-## Review
+## Review Focus
 
 - **Quality**: Naming, abstraction, DRY, error handling
 - **Functionality**: Solves problem, handles edge cases
@@ -27,160 +27,63 @@ Code quality, best practices, potential issues.
 - **Testing**: Tests included, adequate coverage
 - **Documentation**: Complex logic documented
 
-## Output
+## Priority Levels
 
-**[BLOCKING]** Must fix (security, data corruption, critical bugs)  
-**[HIGH]** Important (bugs, performance)  
-**[MEDIUM]** Improvements (refactoring)  
-**[LOW]** Nice-to-have (style, minor suggestions)
+**[BLOCKING]** Must fix before merge:
+- Security vulnerabilities
+- Data corruption risks
+- Critical bugs
+- Breaking changes without migration
 
-## Escalate
+**[HIGH]** Important to address:
+- Bugs affecting functionality
+- Performance issues
+- Missing error handling
 
-- Architectural concerns
-- Major performance implications
-- Security architecture decisions
-- Verify test coverage
-- Assess performance implications
+**[MEDIUM]** Improvements:
+- Code refactoring opportunities
+- Test coverage gaps
+- Documentation updates
 
-## Review Checklist
-
-**Code Quality:**
-
-- [ ] Clear, descriptive naming
-- [ ] Appropriate abstraction level
-- [ ] DRY (Don't Repeat Yourself)
-- [ ] Single Responsibility Principle
-- [ ] Proper error handling
-- [ ] Consistent code style
-
-**Functionality:**
-
-- [ ] Solves the stated problem
-- [ ] Handles edge cases
-- [ ] Input validation
-- [ ] Error scenarios covered
-- [ ] Backwards compatible (if required)
-
-**Performance:**
-
-- [ ] No obvious performance issues
-- [ ] Efficient algorithms
-- [ ] Appropriate caching
-- [ ] Database queries optimized
-- [ ] No memory leaks
-
-**Security:**
-
-- [ ] Input sanitization
-- [ ] Authentication/authorization
-- [ ] No hardcoded secrets
-- [ ] SQL injection prevention
-- [ ] XSS prevention
-
-**Testing:**
-
-- [ ] Unit tests included
-- [ ] Tests cover edge cases
-- [ ] Tests are meaningful
-- [ ] Integration tests where needed
-- [ ] Adequate coverage
-
-**Documentation:**
-
-- [ ] Complex logic documented
-- [ ] API changes documented
-- [ ] README updated if needed
-- [ ] Comments explain "why" not "what"
-
-## Review Focus Areas
-
-**TypeScript:**
-
-- Proper type usage (no `any`)
-- Interfaces vs types used correctly
-- Generics for reusability
-- Type guards where needed
-- Return types explicit
-
-**React:**
-
-- Hooks used correctly
-- Dependencies arrays complete
-- Props interfaces defined
-- Performance optimizations (memo, callback)
-- Accessibility considered
-
-**Backend:**
-
-- DTOs for validation
-- Services handle business logic
-- Controllers are thin
-- Transactions used appropriately
-- Error handling comprehensive
-
-**Database:**
-
-- Migrations are reversible
-- Indexes on query columns
-- N+1 queries avoided
-- Proper cascade behavior
-- Data integrity constraints
+**[LOW]** Nice-to-have:
+- Code style preferences
+- Minor optimizations
 
 ## Common Issues
 
-**Naming:**
-
+**Type Safety:**
 ```typescript
-// ❌ UNCLEAR
-function fn(x: any) { ... }
+// ❌ UNSAFE
+function processData(data: any) { ... }
 
-// ✅ CLEAR
-function calculateTotalPrice(items: CartItem[]): number { ... }
+// ✅ TYPE SAFE
+function processData(data: User): UserDto { ... }
 ```
 
 **Error Handling:**
-
 ```typescript
 // ❌ SWALLOWING ERRORS
 try {
-  await riskyOperation();
+  await operation();
 } catch (e) {
   console.log(e);
 }
 
 // ✅ PROPER HANDLING
 try {
-  await riskyOperation();
+  await operation();
 } catch (error) {
-  logger.error("Risk operation failed", { error, context });
-  throw new ServiceException("Operation failed", error);
-}
-```
-
-**Async/Await:**
-
-```typescript
-// ❌ NOT AWAITING
-async function getUser(id: string) {
-  const user = this.userRepo.findById(id); // Missing await!
-  return user;
-}
-
-// ✅ PROPERLY AWAITED
-async function getUser(id: string): Promise<User> {
-  const user = await this.userRepo.findById(id);
-  if (!user) throw new NotFoundException("User not found");
-  return user;
+  logger.error('Operation failed', { error });
+  throw new ServiceException('Operation failed', error);
 }
 ```
 
 **React Hooks:**
-
 ```typescript
 // ❌ MISSING DEPENDENCY
 useEffect(() => {
   fetchData(userId);
-}, []); // userId missing from deps!
+}, []); // userId missing!
 
 // ✅ COMPLETE DEPENDENCIES
 useEffect(() => {
@@ -188,135 +91,72 @@ useEffect(() => {
 }, [userId]);
 ```
 
-**Type Safety:**
-
+**Async/Await:**
 ```typescript
-// ❌ UNSAFE
-function processData(data: any) {
-  return data.items.map((x) => x.value);
+// ❌ NOT AWAITING
+async function getUser(id: string) {
+  const user = this.repo.findById(id); // Missing await!
+  return user;
 }
 
-// ✅ TYPE SAFE
-interface DataResponse {
-  items: Array<{ value: number }>;
-}
-
-function processData(data: DataResponse): number[] {
-  return data.items.map((item) => item.value);
+// ✅ PROPERLY AWAITED
+async function getUser(id: string): Promise<User> {
+  const user = await this.repo.findById(id);
+  if (!user) throw new NotFoundException();
+  return user;
 }
 ```
 
-## Review Comments Format
-
-**Constructive Feedback:**
-
-```
-[SUGGESTION] Consider extracting this logic into a separate function for reusability.
-
-Current: 50 lines of inline logic
-Better: Create `validateUserInput(input)` function
-
-Benefits:
-- Easier to test
-- Reusable in other controllers
-- More readable
-```
-
-**Bug Identification:**
-
-```
-[BUG] Race condition in user creation
-
-Line 42: User created before email validation completes.
-
-Fix: Await email validation before creating user record.
-```
-
-**Security Issue:**
-
-```
-[SECURITY] SQL injection vulnerability
-
-Line 156: User input concatenated into SQL query
-
-Fix: Use parameterized query:
-db.query('SELECT * FROM users WHERE email = $1', [email])
-```
-
-**Performance Concern:**
-
-```
-[PERFORMANCE] N+1 query detected
-
-Current: Fetching posts in a loop (100+ queries)
-Better: Single query with JOIN or batch loading
-
-Expected improvement: ~95% reduction in query time
-```
-
-## Review Categories
-
-**Blocking Issues (Must Fix):**
-
-- Security vulnerabilities
-- Data corruption risks
-- Breaking changes without migration
-- Critical bugs
-- Missing authentication/authorization
-
-**Non-Blocking (Nice to Have):**
-
-- Code style preferences
-- Minor refactoring opportunities
-- Documentation improvements
-- Test coverage enhancements
-- Performance micro-optimizations
-
-## GitHub PR Review
-
-**Summary Comment:**
+## Review Output Format
 
 ```markdown
 ## Summary
-
-Brief overview of the changes and their purpose.
+Brief overview of code quality and purpose.
 
 ## Strengths
+- Well-structured service layer
+- Comprehensive error handling
+- Good test coverage
 
-- Well-structured code
-- Comprehensive tests
-- Clear documentation
+## Issues
 
-## Concerns
+**[BLOCKING]**
+- Line 42: SQL injection vulnerability
+  Fix: Use parameterized query `db.query('SELECT * FROM users WHERE id = $1', [id])`
 
-1. **[BLOCKING]** Security: SQL injection in line 42
-2. **[HIGH]** Bug: Race condition in user creation
-3. **[MEDIUM]** Performance: Consider caching for this query
-4. **[LOW]** Style: Inconsistent naming in some functions
+**[HIGH]**
+- Line 156: Race condition in user creation
+  Fix: Await email validation before creating user
 
-## Suggestions
+**[MEDIUM]**
+- Lines 100-120: Repeated logic
+  Suggestion: Extract into `validateInput()` helper
 
-- Extract repeated logic in lines 100-120
-- Add integration test for the error path
-- Update API documentation for new endpoint
+**[LOW]**
+- Inconsistent naming in helper functions
+
+## Recommendations
+- Add integration test for error path
+- Update API documentation
+- Consider caching for frequent queries
 
 ## Approval
-
-Approve after addressing blocking and high priority items.
+□ Approved
+□ Approved with comments
+☑ Request changes (address blocking items)
 ```
 
 ## Before Reviewing
 
-1. Understand the purpose of the changes
-2. Read related tickets/issues
-3. Check test coverage reports
-4. Review CI/CD pipeline results
-5. Consider security implications
+1. Understand purpose of changes
+2. Check CI/CD pipeline results
+3. Review test coverage report
+4. Verify security implications
+5. Check for breaking changes
 
-## Escalate When
+## Escalate
 
-- Architectural concerns about the approach
-- Major performance implications
-- Breaking API changes
-- Security architecture decisions
-- Need for broader team discussion
+- Architectural concerns → @architect
+- Major performance implications → @architect
+- Breaking API changes → @architect
+- Security architecture → @security

@@ -1,165 +1,101 @@
 ---
 description: Analyze and optimize performance issues
-agent: build
+agent: debugger
 temperature: 0.2
 ---
 
-Analyze performance: **@$FILE_PATH**
+# Performance Analysis: @$FILE_PATH
 
 $ARGUMENTS
 
 ## Analysis Areas
 
-**Frontend**: Re-renders, bundle size, Core Web Vitals (FCP, LCP, CLS)  
-**Backend**: N+1 queries, missing indexes, slow endpoints, caching  
-**Network**: Request count, payload size, CDN usage
-
-## Check
-
-Bundle size:
-!npm run build -- --stats
-
-Slow queries:
-!grep "SLOW" logs/*.log | tail -10
-
-## Output Format
-
-### Issues Found
-
-**Critical** (>2s or >90% resources):
-- Issue, location, measurement
-
-**High** (>1s or >70% resources):
-- Issue with impact
-
-### Recommendations
-
-**Quick wins** (easy + high impact):
-- Fix with expected improvement
-
-**Medium effort**:
-- Implementation approach
-
-### Expected Results
-
-Specific targets for response time, resource usage, user experience.
-**Resource Usage:**
+**Frontend:**
+- React re-renders
+- Bundle size
+- Core Web Vitals (FCP, LCP, CLS, TTI)
 - Memory leaks
-- CPU intensive operations
-- File handle leaks
 
-### 3. Network Performance
+**Backend:**
+- N+1 queries
+- Missing database indexes
+- Slow endpoints (>500ms)
+- Caching opportunities
 
-- Number of requests
-- Request payload size
-- Response size
-- Caching strategy
+**Network:**
+- Request count
+- Payload size
 - CDN usage
 
-## Performance Profiling
+## Profiling
 
 **Frontend:**
-```typescript
-// Profile React rendering
-import { Profiler } from 'react';
-
-<Profiler id="Component" onRender={logRenderTime}>
-  <Component />
-</Profiler>
-
-// Measure specific operations
-console.time('expensive-operation');
-const result = expensiveOperation();
-console.timeEnd('expensive-operation');
+```bash
+npm run build -- --stats
+npx webpack-bundle-analyzer dist/stats.json
 ```
 
 **Backend:**
 ```typescript
-// Profile database queries
+// Measure operation time
 const start = Date.now();
-const result = await db.query(sql);
+await operation();
 const duration = Date.now() - start;
-if (duration > 100) {
-  logger.warn(`Slow query: ${duration}ms`);
-}
+if (duration > 100) logger.warn(`Slow: ${duration}ms`);
 ```
 
 **Database:**
 ```sql
--- Analyze query performance
 EXPLAIN ANALYZE
 SELECT * FROM users WHERE email = 'test@example.com';
 ```
 
 ## Output Format
 
-### Performance Issues Found
+### Issues Found
 
-**Critical (>2s response time or >90% resource usage):**
-1. Issue description
-   - Location: file:line
-   - Impact: Users affected, severity
-   - Measurement: Current vs expected performance
+**Critical** (>2s response or >90% resources):
+- Issue description
+- Location: file:line
+- Measurement: Current vs expected
+- Impact: Users affected
 
-**High (>1s response time or >70% resource usage):**
-1. Issue description
+**High** (>1s response or >70% resources):
+- Issue with impact
 
-**Medium (>500ms response time or >50% resource usage):**
-1. Issue description
+**Medium** (>500ms or >50% resources):
+- Issue description
 
-### Optimization Recommendations
+### Recommendations
 
 #### Quick Wins (Easy + High Impact)
 1. Recommendation with expected improvement
-2. Code example
+   ```typescript
+   // Before (slow)
+   const users = await Promise.all(
+     ids.map(id => db.users.findById(id))
+   ); // N queries
+
+   // After (fast)
+   const users = await db.users.findByIds(ids); // 1 query
+
+   // Expected: 90% faster for 10+ users
+   ```
 
 #### Medium Effort
-1. Recommendation
-2. Implementation approach
+1. Implementation approach
+2. Expected improvement
 
-#### Long-term Improvements
+#### Long-term
 1. Architectural changes
 2. Infrastructure upgrades
 
-### Implementation Plan
-
-For each optimization:
-```typescript
-// Before (slow)
-const users = await Promise.all(
-  ids.map(id => db.users.findById(id))
-); // N queries
-
-// After (fast)
-const users = await db.users.findByIds(ids); // 1 query
-
-// Expected improvement: 90% faster for 10+ users
-```
-
-### Monitoring Recommendations
-
+### Monitoring
 - Metrics to track
-- Alerts to set up
+- Alerts to set (thresholds)
 - Performance budgets
 
-## Benchmarking
-
-```bash
-# Frontend
-!npm run build
-# Check bundle size
-
-# Backend
-!npm test -- --coverage
-# Check test performance
-
-# Load testing (if applicable)
-!npx autocannon http://localhost:3000/api/endpoint
-```
-
-## Expected Results
-
-- Specific performance targets
-- Response time goals
+### Expected Results
+- Response time targets
 - Resource usage limits
 - User experience improvements

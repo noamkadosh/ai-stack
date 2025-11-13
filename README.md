@@ -1,357 +1,436 @@
-# AI Stack
+# AI Development Infrastructure
 
-Portable multi-agent AI development infrastructure with Docker MCP Gateway orchestration.
+Portable multi-agent AI development setup using Docker MCP Gateway with dynamic tool loading. Works with OpenCode and other MCP-compatible clients.
 
-## Overview
+## What's Inside
 
-Production-ready MCP (Model Context Protocol) infrastructure supporting multiple AI clients with:
-
-- **Agent isolation** - Separate tool catalogs per agent domain
-- **Docker-based** - Containerized MCP servers with security controls
-- **Multi-client** - Works with OpenCode, Claude Code, Cursor, etc.
-- **Stow-managed** - Declarative config deployment via GNU Stow
+- **11 MCP Servers** - Curated set of tools for development (GitHub, Memory, Code Search, AWS, Playwright, etc.)
+- **Dynamic Loading** - Servers spin up/down on-demand to minimize resource usage
+- **Client Configs** - Pre-configured OpenCode setup with agent definitions
+- **Custom Servers** - Local build of Code Index MCP for semantic code search
+- **Stow Deployment** - Clean symlink-based configuration management
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                  AI Client (OpenCode, etc.)              │
-└─────────────────────────┬───────────────────────────────┘
-                          │
-                          ↓
-┌─────────────────────────────────────────────────────────┐
-│              10 Gateway Instances (8000-8009)            │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐  │
-│  │Supervisor│ │ Frontend │ │ Backend  │ │   Test   │  │
-│  │   :8000  │ │   :8001  │ │   :8002  │ │   :8003  │  │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘  │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐  │
-│  │  Infra   │ │ Database │ │   Docs   │ │  Review  │  │
-│  │   :8004  │ │   :8005  │ │   :8006  │ │   :8007  │  │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘  │
-│  ┌──────────┐ ┌──────────┐                             │
-│  │ Debugger │ │ Security │                             │
-│  │   :8008  │ │   :8009  │                             │
-│  └──────────┘ └──────────┘                             │
-└─────────────────────────┬───────────────────────────────┘
-                          │
-                          ↓
-┌─────────────────────────────────────────────────────────┐
-│           MCP Servers (Docker Containers)                │
-│  • GitHub Official    • Playwright    • Docker          │
-│  • Memory MCP        • AWS           • Context7        │
-│  • Code Index MCP    • Obsidian      • Sequential      │
-│  • Desktop Commander • Ref Tools                        │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────┐
+│   AI Client (OpenCode)              │
+│   ~/.config/opencode/               │
+└──────────────┬──────────────────────┘
+               │
+               ↓
+┌─────────────────────────────────────┐
+│   Docker MCP Gateway                │
+│   (Dynamic Tool Loading)            │
+└──────────────┬──────────────────────┘
+               │
+               ↓
+┌─────────────────────────────────────┐
+│   MCP Servers (11 total)            │
+│   • Code Index (local build)        │
+│   • Memory, Context7, GitHub        │
+│   • Playwright, Docker, AWS         │
+│   • Obsidian, Sequential Thinking   │
+│   • Next.js DevTools                │
+└─────────────────────────────────────┘
 ```
+
+**Key Feature**: Dynamic tool loading means all agents have access to all tools, but containers only run when needed—optimizing both capabilities and resource usage.
+
+## Prerequisites
+
+- **Docker Desktop** with MCP Toolkit enabled
+- **Docker MCP CLI** plugin (`docker mcp --version`)
+- **GNU Stow** (`brew install stow` or `apt install stow`)
+- **Git** with submodule support
+- **Node.js 18+** (optional, for testing servers)
+
+## Quick Start
+
+### 1. Clone Repository
+
+```bash
+# As dotfiles submodule (recommended)
+cd ~/dotfiles
+git submodule add <repo-url> ai
+cd ai
+git submodule update --init --recursive
+
+# Or standalone
+git clone --recursive <repo-url> ~/ai-stack
+cd ~/ai-stack
+```
+
+### 2. Build Custom MCP Servers
+
+```bash
+# Build code-index-mcp Docker image
+cd mcp/servers/code-index-mcp
+docker build -t local/code-index-mcp:latest .
+cd ../../..
+```
+
+Verify the image:
+```bash
+docker images | grep code-index-mcp
+# Should show: local/code-index-mcp   latest   ...
+```
+
+### 3. Set Up MCP Catalog
+
+```bash
+# Create the catalog
+docker mcp catalog create mcp-servers
+
+# Import server definitions
+docker mcp catalog import ./mcp/docker/servers-catalog.yaml
+
+# Verify catalog
+docker mcp catalog show mcp-servers
+```
+
+This creates the `mcp-servers` catalog with all 11 servers and ensures the custom code-index server is properly registered.
+
+### 4. Enable Dynamic Tool Loading
+
+```bash
+# Enable dynamic tools feature
+docker mcp feature enable dynamic-tools
+
+# Verify it's enabled
+docker mcp feature ls
+```
+
+**What this does**: Allows the gateway to start/stop MCP server containers on-demand rather than running all servers constantly.
+
+### 5. Deploy OpenCode Configuration
+
+```bash
+# From repository root
+cd clients
+stow -t ~/.config/opencode opencode
+
+# Verify deployment
+ls -la ~/.config/opencode/
+# Should show: opencode.json, agent/, command/, docs/
+```
+
+**What this does**: Creates symlinks from `clients/opencode/` to `~/.config/opencode/`, enabling version-controlled configuration.
+
+### 6. Configure Secrets
+
+Some MCP servers require API keys or credentials. Configure these via Docker secrets or environment variables:
+
+**GitHub** (required):
+```bash
+# Create GitHub Personal Access Token at:
+# https://github.com/settings/tokens/new
+# Scopes needed: repo, read:org, read:user, workflow
+
+# Set via Docker secret (recommended)
+echo "ghp_your_token" | docker secret create github.personal_access_token -
+```
+
+**Context7** (optional - for library docs):
+```bash
+# Sign up at context7.com, get API key
+echo "ctx7_your_key" | docker secret create context7.api_key -
+```
+
+**Obsidian** (optional - for notes):
+```bash
+# Install Obsidian REST API plugin in your vault
+# Get API key from plugin settings
+echo "your_obsidian_key" | docker secret create obsidian.api_key -
+```
+
+**AWS** (optional - for cloud operations):
+```bash
+# Configure via environment variables or IAM role
+export AWS_REGION="us-east-1"
+export AWS_ACCESS_KEY_ID="AKIA..."
+export AWS_SECRET_ACCESS_KEY="..."
+```
+
+### 7. Verify Setup
+
+Test the gateway manually:
+```bash
+docker mcp gateway run --catalog mcp-servers
+# Should start without errors and listen for connections
+# Press Ctrl+C to stop
+```
+
+**Note**: OpenCode will automatically start the gateway when needed via the config in `opencode.json`.
+
+### 8. Launch OpenCode
+
+```bash
+opencode
+```
+
+The gateway will start automatically and tools will load on-demand!
 
 ## Repository Structure
 
 ```
-ai-stack/
-├── clients/                    # Client-specific configs
-│   ├── opencode/              # → ~/.config/opencode/ (via stow)
-│   │   ├── agent/             # 10 specialized agents
-│   │   ├── command/           # 8 custom commands
-│   │   ├── opencode.json      # MCP gateway connections
-│   │   ├── AGENTS.md          # Tech stack & standards
-│   │   └── docs/
-│   └── claude-code/           # → ~/.claude/ (future)
+ai/
+├── clients/
+│   └── opencode/              # → stow to ~/.config/opencode/
+│       ├── opencode.json      # MCP gateway configuration
+│       ├── agent/             # 10 specialized agent definitions
+│       ├── command/           # 8 custom slash commands
+│       └── docs/              # Code standards, security guidelines
 │
-├── mcp/                       # Portable MCP infrastructure
-│   ├── docker/                # Custom MCP servers
-│   │   └── code-index-mcp/    # Submodule
-│   ├── catalogs/              # 10 agent-specific catalogs
-│   │   ├── supervisor-catalog.yaml
-│   │   ├── frontend-catalog.yaml
-│   │   ├── backend-catalog.yaml
-│   │   ├── test-catalog.yaml
-│   │   ├── infra-catalog.yaml
-│   │   ├── database-catalog.yaml
-│   │   ├── docs-catalog.yaml
-│   │   ├── review-catalog.yaml
-│   │   ├── debugger-catalog.yaml
-│   │   └── security-catalog.yaml
-│   ├── scripts/               # Gateway management
-│   │   ├── start-gateways.sh
-│   │   ├── stop-gateways.sh
-│   │   ├── gateway-status.sh
-│   │   └── test-gateway.sh
-│   └── logs/                  # Runtime logs (gitignored)
+├── mcp/
+│   ├── docker/
+│   │   ├── servers-catalog.yaml    # Main catalog (11 servers)
+│   └── servers/
+│       └── code-index-mcp/         # Submodule - local build
 │
-├── README.md                  # This file
-├── SETUP.md                   # Detailed setup guide
-└── .gitignore
+├── docs/
+│   ├── MCP_SERVERS.md         # Server reference documentation
+│   ├── code-standards.md      # TypeScript/React/NestJS standards
+│   └── security-guidelines.md # Security best practices
+│
+└── README.md                  # This file
 ```
 
-## Features
+## Available MCP Servers
 
-### 🎯 Agent Specialization
+| Server | Purpose | Type | Security |
+|--------|---------|------|----------|
+| **code-index** | Semantic code search & analysis | Local Build | Low |
+| **memory** | Knowledge graph for persistent context | Docker Hub | Low |
+| **github-official** | GitHub API integration | Docker Hub | Medium |
+| **context7** | Library documentation lookups | Docker Hub | Low |
+| **playwright** | Browser automation & testing | Docker Hub | Low |
+| **docker** | Container management | Docker Hub | **High** |
+| **obsidian** | Obsidian vault access | Docker Hub | Low |
+| **sequentialthinking** | Structured problem-solving | Docker Hub | Low |
+| **aws-core-mcp-server** | AWS expert guidance | Docker Hub | Low |
+| **aws-documentation** | AWS docs search | Docker Hub | Low |
+| **next-devtools-mcp** | Next.js development tools | Docker Hub | Low |
 
-- Each agent sees only relevant tools (optimized context windows)
-- 10 domain-specific catalogs: supervisor, frontend, backend, test, infra, database, docs, review, debugger, security
-- Prevents tool proliferation and context pollution
-
-### 🐳 Docker MCP Gateway
-
-- Isolated containers with security restrictions (1 CPU, 2GB RAM)
-- Streaming transport for multi-client support (ports 8000-8009)
-- Centralized secrets management
-- Built-in logging and call tracing
-
-### 🔧 Custom MCP Servers
-
-- **Code Index MCP** - Code indexing and search across 7 agent domains
-- Easily extensible with additional custom servers
-
-### 📦 Client Agnostic
-
-- Portable `mcp/` infrastructure works with any MCP client
-- Client configs in `clients/` directory (OpenCode, Claude Code, etc.)
-- Stow-based deployment for clean symlink management
-
-## Quick Start
-
-### Prerequisites
-
-```bash
-# Required
-docker --version          # Docker Desktop with MCP Toolkit enabled
-docker mcp --version      # Docker MCP CLI plugin
-npm install -g supergateway  # MCP transport adapter
-
-# Optional (per client)
-opencode --version        # For OpenCode
-claude --version          # For Claude Code
-```
-
-### Installation
-
-```bash
-# Clone as dotfiles submodule
-cd ~/dotfiles
-git submodule add <repo-url> ai-stack
-cd ai-stack
-git submodule update --init --recursive
-
-# Build custom MCP servers
-cd mcp/docker/code-index-mcp
-docker build -t local/code-index-mcp:latest .
-
-# Import catalogs
-cd ../catalogs
-for catalog in *.yaml; do
-  docker mcp catalog import "$catalog"
-done
-
-# Install OpenCode config
-cd ~/dotfiles/ai/clients
-stow -t ~/.config/opencode opencode
-```
-
-See [SETUP.md](SETUP.md) for detailed phase-by-phase instructions.
+See [MCP_SERVERS.md](docs/MCP_SERVERS.md) for detailed documentation of each server.
 
 ## Usage
 
-### Gateway Management
+### Basic Workflow
 
 ```bash
-cd ~/dotfiles/ai-stack/mcp/scripts
+# Start OpenCode
+opencode
 
-# Start all gateways
-./start-gateways.sh
-
-# Check status
-./gateway-status.sh
-
-# Stop all gateways
-./stop-gateways.sh
-
-# Test individual gateway
-./test-gateway.sh 8000
+# Tools load dynamically as agents use them
+# No need to manually start/stop servers
 ```
 
-### Client Configuration
+### Agent System
 
-**OpenCode** connects via `supergateway` (stdio → streaming):
+OpenCode is configured with 10 specialized agents (see `clients/opencode/agent/`):
+- **architect** - System design and architecture decisions
+- **frontend** - React/Next.js component development
+- **backend** - NestJS/Node.js API development
+- **test-expert** - Testing strategies and automation
+- **infrastructure** - Docker/AWS deployment
+- **database** - PostgreSQL schema and queries
+- **documentation** - Technical documentation
+- **code-review** - Code quality and standards
+- **debugger** - Troubleshooting and diagnosis
+- **security** - Security analysis and audits
 
-```json
-{
-  "mcp": {
-    "frontend-gateway": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "supergateway",
-        "--streamableHttp",
-        "http://localhost:8001/mcp",
-        "--outputTransport",
-        "stdio"
-      ]
-    }
-  }
-}
-```
+Each agent has access to all MCP tools via the shared gateway.
 
-**Claude Code** (future) uses same pattern in `~/.claude/.mcp.json`
+### Custom Commands
 
-### Updating
+Eight slash commands are available (see `clients/opencode/command/`):
+- `/component` - Generate React components
+- `/endpoint` - Create API endpoints
+- `/hook` - Build custom React hooks
+- `/test` - Write test suites
+- `/e2e` - E2E test scenarios
+- `/debug` - Debug assistance
+- `/review` - Code review
+- `/performance` - Performance analysis
 
+## Updating
+
+### Update MCP Servers
 ```bash
-# Update code-index-mcp
-cd ~/dotfiles/ai-stack/mcp/docker/code-index-mcp
+# Pull latest images from Docker Hub
+docker pull mcp/memory:latest
+docker pull mcp/github-official:latest
+docker pull mcp/playwright:latest
+# ... etc
+
+# Reimport catalog to pick up changes
+docker mcp catalog import ./mcp/docker/servers-catalog.yaml
+```
+
+### Update Code Index MCP
+```bash
+cd mcp/servers/code-index-mcp
 git pull origin main
 docker build -t local/code-index-mcp:latest .
-
-# Update catalog
-cd ../../catalogs
-vim frontend-catalog.yaml
-docker mcp catalog import frontend-catalog.yaml
-
-# Restart affected gateways
-cd ../scripts
-./stop-gateways.sh
-./start-gateways.sh
-
-# Commit changes
-cd ~/dotfiles/ai-stack
-git add .
-git commit -m "Update frontend catalog"
-git push
 ```
 
-## Agent-Catalog Mapping
-
-| Agent          | Port | Catalog            | MCP Servers                           |
-| -------------- | ---- | ------------------ | ------------------------------------- |
-| Supervisor     | 8000 | supervisor-catalog | Memory, Context7, Sequential Thinking |
-| Frontend       | 8001 | frontend-catalog   | Playwright, Code Index, Browser       |
-| Backend        | 8002 | backend-catalog    | Docker, Code Index, GitHub            |
-| Test Expert    | 8003 | test-catalog       | Playwright, Code Index                |
-| Infrastructure | 8004 | infra-catalog      | Docker, AWS, Desktop Commander        |
-| Database       | 8005 | database-catalog   | Code Index, GitHub                    |
-| Documentation  | 8006 | docs-catalog       | Obsidian, Code Index                  |
-| Code Reviewer  | 8007 | review-catalog     | GitHub, Code Index                    |
-| Debugger       | 8008 | debugger-catalog   | Code Index, Desktop Commander, GitHub |
-| Security       | 8009 | security-catalog   | GitHub, Code Index                    |
-
-## Customization
-
-### Add New Agent Domain
-
+### Update OpenCode Configuration
 ```bash
-# 1. Create catalog
-cd ~/dotfiles/ai-stack/mcp/catalogs
-cat > my-agent-catalog.yaml << 'EOF'
-version: 2
-name: my-agent-catalog
-displayName: My Agent Catalog
-registry:
-  # Add MCP servers here
-EOF
+# Edit files in clients/opencode/
+# Changes are immediately reflected (symlinked via stow)
+vim clients/opencode/opencode.json
 
-# 2. Import catalog
-docker mcp catalog import my-agent-catalog.yaml
-
-# 3. Add to start-gateways.sh
-vim ../scripts/start-gateways.sh
-# Add: ["my-agent-catalog"]=8010
-
-# 4. Configure client to use port 8010
+# If you add new files, re-stow
+cd clients
+stow -R -t ~/.config/opencode opencode
 ```
 
-### Add Custom MCP Server
-
+### Update This Repository
 ```bash
-# 1. Add as submodule
-cd ~/dotfiles/ai-stack/mcp/docker
-git submodule add <repo-url> my-mcp-server
+# As dotfiles submodule
+cd ~/dotfiles/ai
+git pull origin main
+git submodule update --remote --recursive
 
-# 2. Build
-cd my-mcp-server
-docker build -t local/my-mcp-server:latest .
-
-# 3. Add to catalog
-cd ../../catalogs
-vim my-agent-catalog.yaml
-# Add server with image: local/my-mcp-server:latest
-
-# 4. Reimport
-docker mcp catalog import my-agent-catalog.yaml
+# Standalone
+cd ~/ai-stack
+git pull origin main
+git submodule update --remote --recursive
 ```
 
 ## Troubleshooting
 
-**Gateway won't start:**
-
+### Gateway Won't Start
 ```bash
-lsof -i :8000  # Check port availability
-cat ~/dotfiles/ai-stack/mcp/logs/supervisor-catalog.log  # Check logs
-docker mcp catalog show supervisor-catalog  # Verify catalog
+# Check Docker MCP plugin
+docker mcp --version
+
+# Check catalog exists
+docker mcp catalog ls
+# Should show: mcp-servers
+
+# If catalog missing, recreate
+docker mcp catalog create mcp-servers
+docker mcp catalog import ./mcp/docker/servers-catalog.yaml
+
+# Check feature is enabled
+docker mcp feature ls | grep dynamic-tools
+
+# Try manual start to see errors
+docker mcp gateway run --catalog mcp-servers
 ```
 
-**Client can't connect:**
-
+### Code Index Image Not Found
 ```bash
-npx -y supergateway --version  # Verify installed
-curl http://localhost:8000/mcp  # Test gateway
-ps aux | grep "docker mcp gateway.*8000"  # Verify running
+# Verify image exists
+docker images | grep code-index-mcp
+
+# Rebuild if missing
+cd mcp/servers/code-index-mcp
+docker build -t local/code-index-mcp:latest .
 ```
 
-**Custom image not found:**
-
+### Stow Conflicts
 ```bash
-docker images | grep local/  # List local images
-cd ~/dotfiles/ai-stack/mcp/docker/code-index-mcp
-docker build -t local/code-index-mcp:latest .  # Rebuild
+# Remove existing config first
+rm -rf ~/.config/opencode
+
+# Then stow
+cd clients
+stow -t ~/.config/opencode opencode
+
+# Or force overwrite
+stow -t ~/.config/opencode --adopt opencode
 ```
 
-## Performance
+### MCP Server Authentication Errors
+```bash
+# Check Docker secrets
+docker secret ls
 
-- **Streaming transport latency:** ~5-10ms (negligible vs LLM inference)
-- **Gateway overhead:** <100MB RAM per instance
-- **Container startup:** ~2-3 seconds per MCP server
-- **Concurrent agents:** All 10 can run simultaneously
+# Recreate secret if needed
+docker secret rm github.personal_access_token
+echo "ghp_new_token" | docker secret create github.personal_access_token -
+```
 
-## Security
+### Check Server Logs
+```bash
+# List running MCP containers
+docker ps | grep mcp
 
-- ✅ Isolated Docker containers per MCP server
-- ✅ Granular permission controls (CPU/memory limits)
-- ✅ Secrets managed via Docker Desktop (not in env vars)
-- ✅ No browser session access (Browser MCP removed)
-- ✅ Local execution (no remote MCP servers)
-- ✅ Streaming transport (no HTTP endpoint exposure with stdio)
+# View logs for specific server
+docker logs <container-id>
 
-## Submodules
+# Follow logs in real-time
+docker logs -f <container-id>
+```
 
-- `mcp/docker/code-index-mcp` - [johnhuang316/code-index-mcp](https://github.com/johnhuang316/code-index-mcp)
+## Security Notes
 
-**Initialize after cloning:**
+- **Secrets Management**: Use Docker secrets for API keys, not environment variables
+- **Docker Access**: The `docker` MCP server has full Docker socket access—use carefully
+- **AWS Credentials**: Use read-only IAM policies for non-infrastructure work
+- **GitHub Tokens**: Use fine-grained tokens with minimum required scopes
+- **Network Access**: MCP servers run in isolated containers with controlled network access
+
+See [docs/security-guidelines.md](docs/security-guidelines.md) for comprehensive security practices.
+
+## Advanced Configuration
+
+### Custom MCP Servers
+
+To add your own MCP server:
+
+1. Add to `mcp/docker/servers-catalog.yaml`:
+```yaml
+registry:
+  my-server:
+    description: My custom server
+    title: My Server
+    type: server
+    image: local/my-server:latest
+    tools: []
+```
+
+2. Build the image:
+```bash
+docker build -t local/my-server:latest /path/to/server
+```
+
+3. Reimport catalog:
+```bash
+docker mcp catalog import ./mcp/docker/servers-catalog.yaml
+```
+
+### Per-Project Configuration
+
+OpenCode can use project-specific configs:
 
 ```bash
-git submodule update --init --recursive
+# In project root
+mkdir -p .opencode
+ln -s ~/.config/opencode/opencode.json .opencode/opencode.json
+
+# Override specific settings
+cat > .opencode/opencode.json <<EOF
+{
+  "instructions": ["PROJECT_RULES.md"]
+}
+EOF
 ```
 
 ## Philosophy
 
-**Project-agnostic** - No project-specific MCP servers (e.g., Storybook)  
-**Security-first** - No access to logged-in browser sessions  
-**Performance-optimized** - Minimal tool sets per agent  
-**Maintainable** - Upstream Dockerfiles, clear separation of concerns  
-**Portable** - Works across clients and machines
+- **Dynamic over Static**: Tools load on-demand, not all at once
+- **Security First**: Minimal permissions, isolated containers
+- **Developer Experience**: One gateway, all tools, zero friction
+- **Portability**: Works across machines via stow + git
+- **Upstream First**: Use official Docker images when possible
 
-## Credits
+## Resources
 
-Built on:
-
-- [Docker MCP Gateway](https://github.com/docker/mcp-gateway)
-- [Model Context Protocol](https://modelcontextprotocol.io)
-- [OpenCode](https://opencode.ai) (primary client)
-
-## License
-
-MIT - Use freely, modify as needed.
-
----
-
-**See [SETUP.md](SETUP.md) for detailed installation instructions.**
+- [OpenCode Documentation](https://opencode.ai/docs/)
+- [Docker MCP Gateway](https://docs.docker.com/ai/mcp-catalog-and-toolkit/mcp-gateway/)
+- [MCP Specification](https://modelcontextprotocol.io/)
+- [Code Index MCP](https://github.com/johnhuang316/code-index-mcp)

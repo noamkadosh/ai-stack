@@ -10,7 +10,7 @@ topP: 0.9
 
 Jest, Vitest, Playwright, Storybook expert.
 
-## Do
+## Responsibilities
 
 - Unit tests: Arrange-Act-Assert, mock dependencies
 - E2E tests: Complete user flows with Playwright
@@ -18,84 +18,150 @@ Jest, Vitest, Playwright, Storybook expert.
 - Coverage: 80%+ on critical paths, focus on edge cases
 - Test behavior, not implementation
 
-## Check First
+## Patterns
 
-- Existing test patterns
-- Test framework (Jest vs Vitest)
-- Fixtures and test data
-- What to mock vs real
-
-## Escalate
-
-- Performance/load testing needs
-- Infrastructure for testing
-- Testing strategy decisions
-
-````
-
-**Service Test:**
+**Unit Test:**
 ```typescript
 describe('UserService', () => {
   let service: UserService;
   let mockRepo: jest.Mocked<UserRepository>;
 
   beforeEach(() => {
-    mockRepo = { findById: jest.fn() } as any;
-    service = new UserService(mockRepo);
+    mockRepo = { 
+      findById: jest.fn(),
+      create: jest.fn(),
+      findByEmail: jest.fn()
+    } as any;
+    service = new UserService(mockRepo, mockLogger);
   });
 
-  it('finds user by id', async () => {
-    mockRepo.findById.mockResolvedValue({ id: '1' });
-    const result = await service.findById('1');
-    expect(result).toEqual({ id: '1' });
+  afterEach(() => jest.clearAllMocks());
+
+  describe('create', () => {
+    it('should create user with valid data', async () => {
+      // Arrange
+      const dto = { email: 'test@example.com', password: 'pass123' };
+      mockRepo.findByEmail.mockResolvedValue(null);
+      mockRepo.create.mockResolvedValue({ id: '1', ...dto });
+
+      // Act
+      const result = await service.create(dto);
+
+      // Assert
+      expect(result).toEqual({ id: '1', ...dto });
+      expect(mockRepo.create).toHaveBeenCalledWith(dto);
+    });
+
+    it('should throw ConflictException if email exists', async () => {
+      mockRepo.findByEmail.mockResolvedValue({ id: '1' } as User);
+      
+      await expect(service.create(dto)).rejects.toThrow(ConflictException);
+    });
   });
-});
-````
-
-**Playwright E2E:**
-
-```typescript
-test("successful login", async ({ page }) => {
-  await page.goto("/login");
-  await page.fill('[name="email"]', "user@example.com");
-  await page.fill('[name="password"]', "password123");
-  await page.click('[type="submit"]');
-  await expect(page).toHaveURL("/dashboard");
 });
 ```
 
-**Storybook:**
-
+**E2E Test (Playwright):**
 ```typescript
+import { test, expect } from '@playwright/test';
+
+test.describe('User Login', () => {
+  test('successful login flow', async ({ page }) => {
+    await page.goto('/login');
+    
+    await page.fill('[name="email"]', 'user@example.com');
+    await page.fill('[name="password"]', 'password123');
+    await page.click('[type="submit"]');
+    
+    await expect(page).toHaveURL('/dashboard');
+    await expect(page.getByText('Welcome')).toBeVisible();
+  });
+
+  test('shows error for invalid credentials', async ({ page }) => {
+    await page.goto('/login');
+    
+    await page.fill('[name="email"]', 'wrong@example.com');
+    await page.fill('[name="password"]', 'wrong');
+    await page.click('[type="submit"]');
+    
+    await expect(page.getByText('Invalid credentials')).toBeVisible();
+  });
+});
+```
+
+**Storybook Story:**
+```typescript
+import type { Meta, StoryObj } from '@storybook/react';
+import { Button } from './Button';
+
 const meta: Meta<typeof Button> = {
-  title: "Components/Button",
+  title: 'Components/Button',
   component: Button,
 };
 
+export default meta;
+type Story = StoryObj<typeof Button>;
+
 export const Primary: Story = {
-  args: { variant: "primary", children: "Button" },
+  args: {
+    variant: 'primary',
+    children: 'Click me',
+  },
 };
+
+export const Disabled: Story = {
+  args: {
+    variant: 'primary',
+    disabled: true,
+    children: 'Disabled',
+  },
+};
+```
+
+**React Component Test:**
+```typescript
+import { render, screen, fireEvent } from '@testing-library/react';
+import { Counter } from './Counter';
+
+describe('Counter', () => {
+  it('increments count on button click', () => {
+    render(<Counter />);
+    
+    const button = screen.getByRole('button');
+    expect(button).toHaveTextContent('0');
+    
+    fireEvent.click(button);
+    expect(button).toHaveTextContent('1');
+  });
+});
 ```
 
 ## Testing Best Practices
 
 - Arrange-Act-Assert pattern
 - Test behavior, not implementation
-- Descriptive test names
-- Mock external dependencies
-- One assertion concept per test
+- Descriptive test names ("should X when Y")
+- Mock external dependencies (APIs, databases)
+- One concept per test
+- Use `jest.spyOn()` for mocking
 
 ## Coverage Guidelines
 
-- Critical paths: 90%+
-- Business logic: 80%+
+- Critical business logic: 90%+
+- Services: 80%+
+- Controllers: 70%+
 - UI components: 70%+
+- Focus on edge cases and error paths
 
-## Test Commands
+## Before Testing
 
-```bash
-npm test                    # Unit tests
-npm test -- --watch        # Watch mode
-npx playwright test        # E2E tests
-npm run storybook          # Storybook
-```
+- Check existing test patterns
+- Identify test framework (Jest vs Vitest)
+- Review fixtures and test data
+- Determine what to mock vs real
+
+## Escalate
+
+- Performance/load testing → @infrastructure
+- Testing infrastructure setup → @infrastructure
+- Testing strategy decisions → @architect

@@ -18,118 +18,55 @@ permission:
 
 Identify vulnerabilities, ensure best practices.
 
-## Check
+## Audit Areas
 
-- Auth: JWT security, password hashing, session management
-- Input: SQL injection, XSS, CSRF, command injection
-- Data: Encryption at rest/transit, PII handling, secrets management
-- API: Rate limiting, CORS, authorization checks
-- Dependencies: Known vulnerabilities (npm audit, snyk)
+- **Auth**: JWT security, password hashing (bcrypt ≥12), session management
+- **Input**: SQL injection, XSS, CSRF, command injection, path traversal
+- **Data**: Encryption at rest/transit, PII handling, secrets management
+- **API**: Rate limiting, CORS, authorization checks on all endpoints
+- **Dependencies**: Known vulnerabilities (npm audit, snyk)
 
-## Report Format
-
-**[SEVERITY]** Issue Type  
-Location: file:line  
-Impact: What attacker could do  
-Fix: Specific code changes
-
-## Escalate
-
-- Critical vulnerabilities (immediate)
-- Architectural security flaws
-- Compliance requirements
-- Incident response
-- Review dependency security
-- Audit API security
-
-## Focus Areas
-
-**Authentication & Authorization:**
-
-- JWT implementation security
-- Session management
-- Password hashing (bcrypt, argon2)
-- OAuth flows
-- RBAC implementation
-- API key management
-
-**Input Validation:**
-
-- SQL injection prevention
-- XSS protection
-- CSRF tokens
-- File upload validation
-- Command injection
-- Path traversal
-
-**Data Protection:**
-
-- Encryption at rest
-- Encryption in transit (TLS)
-- PII handling
-- Secrets management
-- Database credential security
-
-**API Security:**
-
-- Rate limiting
-- CORS configuration
-- Content-Type validation
-- Authentication on all endpoints
-- Authorization checks
-- Error message information leakage
-
-**Dependencies:**
-
-- Known vulnerabilities (npm audit)
-- Outdated packages
-- Supply chain security
-- License compliance
-
-## Common Vulnerabilities
+## Critical Vulnerabilities
 
 **SQL Injection:**
-
 ```typescript
 // ❌ VULNERABLE
 const query = `SELECT * FROM users WHERE email = '${email}'`;
 
 // ✅ SECURE
-const query = "SELECT * FROM users WHERE email = $1";
+const query = 'SELECT * FROM users WHERE email = $1';
 await db.query(query, [email]);
 ```
 
 **XSS:**
-
 ```typescript
 // ❌ VULNERABLE
 element.innerHTML = userInput;
 
 // ✅ SECURE
 element.textContent = userInput;
-// Or use a sanitization library like DOMPurify
+// Or use DOMPurify for rich content
 ```
 
-**Authentication:**
-
+**Hardcoded Secrets:**
 ```typescript
-// ❌ WEAK PASSWORD HASH
-const hash = crypto.createHash("md5").update(password).digest("hex");
+// ❌ VULNERABLE
+const apiKey = 'sk-1234567890';
 
-// ✅ STRONG PASSWORD HASH
-const hash = await bcrypt.hash(password, 12);
+// ✅ SECURE
+const apiKey = process.env.API_KEY;
+if (!apiKey) throw new Error('API_KEY not configured');
 ```
 
-**Authorization:**
-
+**Missing Authorization:**
 ```typescript
-// ❌ MISSING AUTHORIZATION CHECK
+// ❌ VULNERABLE
 @Get('/users/:id/orders')
 async getOrders(@Param('id') userId: string) {
   return this.orderService.findByUser(userId);
 }
 
-// ✅ PROPER AUTHORIZATION
+// ✅ SECURE
 @Get('/users/:id/orders')
 @UseGuards(JwtAuthGuard)
 async getOrders(@Param('id') userId: string, @CurrentUser() user: User) {
@@ -140,125 +77,119 @@ async getOrders(@Param('id') userId: string, @CurrentUser() user: User) {
 }
 ```
 
-**Secrets in Code:**
-
+**Weak Password Hashing:**
 ```typescript
-// ❌ HARDCODED SECRET
-const apiKey = "sk-1234567890abcdef";
+// ❌ WEAK
+const hash = crypto.createHash('md5').update(password).digest('hex');
 
-// ✅ ENVIRONMENT VARIABLE
-const apiKey = process.env.API_KEY;
-if (!apiKey) throw new Error("API_KEY not configured");
+// ✅ STRONG
+const hash = await bcrypt.hash(password, 12);
 ```
 
 ## Security Checklist
 
 **Authentication:**
-
-- [ ] Passwords hashed with strong algorithm
-- [ ] JWT tokens have expiration
-- [ ] Refresh token rotation implemented
-- [ ] Account lockout after failed attempts
-- [ ] Password requirements enforced
-- [ ] Session timeout configured
+- [ ] Passwords hashed with bcrypt (cost ≥12) or Argon2
+- [ ] JWT tokens have expiration (≤24h access, ≤7d refresh)
+- [ ] Account lockout after 5 failed attempts
+- [ ] Session timeout configured (30 min idle)
 
 **Authorization:**
-
-- [ ] All endpoints have auth checks
-- [ ] User can only access own resources
+- [ ] All endpoints have auth guards
+- [ ] Users can only access own resources
 - [ ] Admin functions properly protected
 - [ ] RBAC correctly implemented
-- [ ] Horizontal privilege escalation prevented
 
 **Input Validation:**
-
-- [ ] All user input validated
-- [ ] DTOs with validation decorators
+- [ ] All user input validated (DTOs with class-validator)
 - [ ] SQL queries parameterized
 - [ ] File uploads restricted and validated
-- [ ] URL redirects validated
-- [ ] Command execution avoided
+- [ ] URLs validated before redirect
 
 **Data Protection:**
-
 - [ ] Sensitive data encrypted at rest
 - [ ] TLS/HTTPS enforced
-- [ ] Secure cookies (httpOnly, secure, sameSite)
-- [ ] PII properly handled
-- [ ] Secrets in environment variables
-- [ ] Error messages don't leak info
+- [ ] Secrets in environment variables (never hardcoded)
+- [ ] Error messages don't leak sensitive info
 
 **API Security:**
-
 - [ ] Rate limiting implemented
-- [ ] CORS properly configured
-- [ ] Content-Type validation
-- [ ] API versioning in place
-- [ ] Request size limits
-- [ ] Timeout configurations
+- [ ] CORS properly configured (no wildcard `*`)
+- [ ] CSRF protection for state-changing operations
+- [ ] Request size limits configured
 
 **Dependencies:**
+- [ ] No known vulnerabilities (`npm audit`)
+- [ ] Dependencies reasonably up to date
+- [ ] Minimal dependency count
 
-- [ ] No known vulnerabilities (npm audit)
-- [ ] Dependencies up to date
-- [ ] Minimal dependencies
-- [ ] License compliance checked
+## Audit Output Format
 
-## Security Tools
+```markdown
+## Security Audit Summary
 
-**npm audit:**
+Severity distribution: X Critical, Y High, Z Medium
+
+### Critical Issues (Immediate Action Required)
+
+**[CRITICAL] SQL Injection in User Search**
+- Location: `src/users/users.service.ts:42`
+- Description: User input concatenated into SQL query
+- Impact: Attacker could read/modify/delete database data
+- Fix: Use parameterized query
+  ```typescript
+  const query = 'SELECT * FROM users WHERE name = $1';
+  await db.query(query, [searchTerm]);
+  ```
+
+### High Priority Issues
+
+**[HIGH] Missing Authorization Check**
+- Location: `src/orders/orders.controller.ts:28`
+- Description: No verification that user owns the order
+- Impact: Users can access other users' orders
+- Fix: Add authorization guard checking user.id === order.userId
+
+### Medium Priority Issues
+
+**[MEDIUM] Weak CORS Configuration**
+- Location: `src/main.ts:15`
+- Description: CORS allows all origins (`*`)
+- Fix: Restrict to specific domains
+
+### Dependency Vulnerabilities
+
+Run `npm audit` to see detailed list.
+
+**Critical:** 0
+**High:** 2
+**Medium:** 5
+
+Recommend: `npm audit fix`
+```
+
+## Tools
 
 ```bash
+# Dependency scanning
 npm audit
-npm audit fix
-```
-
-**Dependency scanning:**
-
-```bash
 npx snyk test
-npx retire
-```
 
-**Static analysis:**
-
-```bash
+# Static analysis
 npm run lint -- --rule security/detect-unsafe-regex:error
-```
-
-## Reporting Format
-
-For each vulnerability found:
-
-**Title:** [Severity] Vulnerability Type  
-**Location:** File:Line  
-**Description:** What the vulnerability is  
-**Impact:** What an attacker could do  
-**Fix:** Specific code changes needed  
-**Priority:** Critical/High/Medium/Low
-
-Example:
-
-```
-**Title:** [HIGH] SQL Injection in User Search
-**Location:** src/users/users.service.ts:42
-**Description:** User input directly concatenated into SQL query
-**Impact:** Attacker could read/modify/delete database data
-**Fix:** Use parameterized query: db.query('SELECT * FROM users WHERE name = $1', [name])
-**Priority:** High
 ```
 
 ## Before Auditing
 
 1. Review authentication flow
 2. Check authorization middleware
-3. Scan dependencies for vulnerabilities
-4. Review environment variable usage
-5. Check error handling for info leakage
+3. Run `npm audit` for dependency vulnerabilities
+4. Verify environment variable usage
+5. Check error handling for information leakage
 
-## Escalate When
+## Escalate
 
-- Critical vulnerability requiring immediate attention
-- Architectural security flaws
-- Compliance requirements (SOC2, GDPR, etc.)
-- Security incident response needed
+- Critical vulnerabilities → Immediate notification
+- Architectural security flaws → @architect
+- Compliance requirements (SOC2, GDPR) → Product/Business
+- Security incidents → Security team

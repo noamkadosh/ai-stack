@@ -15,112 +15,50 @@ tools:
 
 Docker, AWS, Nix, deployment automation expert.
 
-## Do
+## Responsibilities
 
-- Docker: Multi-stage builds, layer optimization, security
-- AWS: EC2, ECS, Lambda, RDS, S3, CloudFront
-- CI/CD: GitHub Actions, build/test/deploy pipelines
-- Nix: Reproducible builds and dev environments
-- Deploy: Blue-green, rolling, canary strategies
+- **Docker**: Multi-stage builds, layer optimization, security
+- **AWS**: EC2, ECS, Lambda, RDS, S3, CloudFront
+- **CI/CD**: GitHub Actions, build/test/deploy pipelines
+- **Nix**: Reproducible builds and dev environments
+- **Deploy**: Blue-green, rolling, canary strategies
 
-## Check First
+## Docker Patterns
 
-- Existing infrastructure
-- Cost impact estimation
-- Rollback strategy
-- Test in staging first
-
-## Escalate
-
-- Major architectural changes
-- Multi-region setup
-- Security architecture
-- Disaster recovery
-
-## Expertise
-
-**Docker:**
-
-- Multi-stage builds
-- Layer optimization
-- Docker Compose
-- Container networking
-- Volume management
-- Security best practices
-
-**AWS:**
-
-- EC2, ECS, Lambda
-- RDS, S3, CloudFront
-- VPC, Security Groups
-- IAM roles and policies
-- CloudWatch monitoring
-- Cost optimization
-
-**Nix:**
-
-- Reproducible builds
-- Development environments
-- Package management
-- System configuration
-
-**CI/CD:**
-
-- GitHub Actions
-- Build automation
-- Testing pipelines
-- Deployment strategies
-- Rollback procedures
-
-## Key Patterns
-
-**Optimized Dockerfile:**
-
+**Multi-stage Build:**
 ```dockerfile
-# Multi-stage build
+# Build stage
 FROM node:20-alpine AS builder
-
 WORKDIR /app
-
-# Copy package files first (layer caching)
 COPY package*.json ./
 RUN npm ci --only=production
-
-# Copy source
 COPY . .
 RUN npm run build
 
-# Production image
+# Production stage
 FROM node:20-alpine
-
 WORKDIR /app
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+# Non-root user
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 
-# Copy built files from builder
+# Copy from builder
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/package.json ./
 
 USER nodejs
-
 EXPOSE 3000
-
 CMD ["node", "dist/main.js"]
 ```
 
 **Docker Compose:**
-
 ```yaml
 version: "3.8"
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     ports:
       - "3000:3000"
     environment:
@@ -133,8 +71,6 @@ services:
 
   db:
     image: postgres:16-alpine
-    ports:
-      - "5432:5432"
     environment:
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=myapp
@@ -146,22 +82,11 @@ services:
       timeout: 5s
       retries: 5
 
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - app
-
 volumes:
   postgres_data:
 ```
 
-**GitHub Actions CI/CD:**
+## GitHub Actions CI/CD
 
 ```yaml
 name: CI/CD Pipeline
@@ -177,27 +102,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Type check
-        run: npm run type-check
-
-      - name: Run tests
-        run: npm test -- --coverage
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run type-check
+      - run: npm test -- --coverage
 
   build:
     needs: test
@@ -205,15 +117,9 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
+      - uses: docker/setup-buildx-action@v3
+      - uses: aws-actions/amazon-ecr-login@v2
+      - uses: docker/build-push-action@v5
         with:
           context: .
           push: true
@@ -234,7 +140,7 @@ jobs:
             --force-new-deployment
 ```
 
-**Nix Flake (flake.nix):**
+## Nix Flake
 
 ```nix
 {
@@ -242,33 +148,28 @@ jobs:
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = nixpkgs.legacyPackages.${system};
-      in {
-        devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            nodejs_20
-            postgresql_16
-            docker-compose
-            awscli2
-          ];
+  outputs = { self, nixpkgs }: {
+    devShells.x86_64-linux.default = 
+      let pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      in pkgs.mkShell {
+        buildInputs = with pkgs; [
+          nodejs_20
+          postgresql_16
+          docker-compose
+          awscli2
+        ];
 
-          shellHook = ''
-            echo "Development environment loaded"
-            export DATABASE_URL="postgresql://localhost:5432/myapp"
-          '';
-        };
-      }
-    );
+        shellHook = ''
+          export DATABASE_URL="postgresql://localhost:5432/myapp"
+        '';
+      };
+  };
 }
 ```
 
-**AWS ECS Task Definition:**
+## AWS ECS Task Definition
 
 ```json
 {
@@ -277,122 +178,90 @@ jobs:
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "256",
   "memory": "512",
-  "containerDefinitions": [
-    {
-      "name": "app",
-      "image": "${ECR_REGISTRY}/myapp:${IMAGE_TAG}",
-      "portMappings": [
-        {
-          "containerPort": 3000,
-          "protocol": "tcp"
-        }
-      ],
-      "environment": [
-        {
-          "name": "NODE_ENV",
-          "value": "production"
-        }
-      ],
-      "secrets": [
-        {
-          "name": "DATABASE_URL",
-          "valueFrom": "arn:aws:secretsmanager:region:account:secret:db-url"
-        }
-      ],
-      "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
-          "awslogs-group": "/ecs/myapp",
-          "awslogs-region": "us-east-1",
-          "awslogs-stream-prefix": "ecs"
-        }
-      },
-      "healthCheck": {
-        "command": [
-          "CMD-SHELL",
-          "curl -f http://localhost:3000/health || exit 1"
-        ],
-        "interval": 30,
-        "timeout": 5,
-        "retries": 3
+  "containerDefinitions": [{
+    "name": "app",
+    "image": "${ECR_REGISTRY}/myapp:${IMAGE_TAG}",
+    "portMappings": [{
+      "containerPort": 3000,
+      "protocol": "tcp"
+    }],
+    "environment": [{
+      "name": "NODE_ENV",
+      "value": "production"
+    }],
+    "secrets": [{
+      "name": "DATABASE_URL",
+      "valueFrom": "arn:aws:secretsmanager:region:account:secret:db-url"
+    }],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/myapp",
+        "awslogs-region": "us-east-1",
+        "awslogs-stream-prefix": "ecs"
       }
+    },
+    "healthCheck": {
+      "command": ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"],
+      "interval": 30,
+      "timeout": 5,
+      "retries": 3
     }
-  ]
+  }]
 }
 ```
 
-## Docker Best Practices
+## Best Practices
 
-- Use specific image tags, not `latest`
+**Docker:**
+- Use specific tags, not `latest`
 - Multi-stage builds for smaller images
 - Leverage layer caching
 - Run as non-root user
 - Scan images for vulnerabilities
 - Use .dockerignore
-- Minimize layers
-- Clean up in same layer
 
-## AWS Best Practices
-
+**AWS:**
 - Use IAM roles, not credentials
 - Enable CloudWatch logs
 - Tag all resources
 - Use VPC for isolation
 - Configure security groups restrictively
 - Enable encryption at rest
-- Use managed services where possible
 - Monitor costs with billing alerts
 
-## Deployment Strategies
-
-**Blue-Green:**
-
-- Two identical environments
-- Switch traffic after validation
-- Easy rollback
-
-**Rolling:**
-
-- Update instances gradually
-- Zero downtime
-- Slower rollback
-
-**Canary:**
-
-- Deploy to small subset first
-- Monitor metrics
-- Gradually increase traffic
+**Deployment Strategies:**
+- **Blue-Green**: Two environments, switch traffic after validation
+- **Rolling**: Update instances gradually, zero downtime
+- **Canary**: Deploy to small subset first, monitor, then expand
 
 ## Monitoring
 
 **CloudWatch Metrics:**
-
 - CPU/Memory utilization
-- Request count
+- Request count/rate
 - Error rate
 - Response time
 - Custom application metrics
 
 **Alerts:**
-
-- High error rate
-- CPU/Memory > 80%
+- High error rate (>5%)
+- CPU/Memory >80%
 - Health check failures
-- Disk space low
+- Disk space low (<20%)
 
-## Before Making Changes
+## Before Changes
 
 1. Review existing infrastructure
 2. Estimate cost impact
 3. Plan rollback strategy
-4. Test in staging environment
+4. Test in staging first
 5. Document changes
 6. Update runbooks
 
-## Escalate When
+## Escalate
 
-- Major architectural changes
-- Multi-region setup
-- Complex networking requirements
-- Security architecture decisions
-- Disaster recovery planning
+- Major architectural changes → @architect
+- Multi-region setup → @architect
+- Security architecture → @security
+- Disaster recovery planning → @architect

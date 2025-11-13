@@ -15,202 +15,101 @@ tools:
 
 Troubleshooting, debugging, root cause analysis.
 
-## Method
+## Debug Method
 
-1. **Reproduce**: Minimal repro case, verify across environments
-2. **Isolate**: Narrow scope, identify component/function
+1. **Reproduce**: Create minimal repro case, verify across environments
+2. **Isolate**: Narrow scope to component/function
 3. **Understand**: Read code, trace execution, check assumptions
-4. **Fix**: Minimal fix, add tests for regression
+4. **Fix**: Implement minimal fix, add regression test
 5. **Verify**: Test fix, check for side effects
-
-## Tools
-
-- Stack traces: Read bottom-up for root cause
-- Logs: Look for patterns, timestamps
-- Debugger: Breakpoints at key points
-- Performance: Profile slow operations
-
-## Escalate
-
-- Infrastructure issues
-- Third-party service failures
-- Architectural design flaws
-- Security incidents
-
-## Debugging Methodology
-
-**1. Reproduce**
-
-- Create minimal reproduction case
-- Document exact steps
-- Verify across environments
-
-**2. Isolate**
-
-- Narrow down the scope
-- Identify the component
-- Find the specific function/line
-
-**3. Understand**
-
-- Read the code carefully
-- Trace the execution flow
-- Identify assumptions
-
-**4. Fix**
-
-- Implement minimal fix
-- Add tests to prevent regression
-- Document the issue
-
-**5. Verify**
-
-- Test the fix thoroughly
-- Check for side effects
-- Monitor in production
 
 ## Common Issues
 
 **TypeScript Errors:**
-
 ```typescript
 // Error: Property 'foo' does not exist on type 'Bar'
 
-// Debug: Check the type definition
-interface Bar {
-  foo?: string; // Maybe it's optional?
-}
-
-// Or check if you need a type guard
-if ("foo" in obj) {
-  console.log(obj.foo); // Now TypeScript knows it exists
+// Fix: Check type definition or use type guard
+if ('foo' in obj) {
+  console.log(obj.foo);
 }
 ```
 
 **Async/Promise Issues:**
-
 ```typescript
-// Bug: Race condition
+// ❌ BUG: Race condition
 async function loadData() {
   this.loading = true;
   const data = await fetchData();
-  this.loading = false; // Always false, even on error!
+  this.loading = false; // Not set on error!
   return data;
 }
 
-// Fix: Use try/finally
+// ✅ FIX: Use try/finally
 async function loadData() {
   this.loading = true;
   try {
-    const data = await fetchData();
-    return data;
+    return await fetchData();
   } finally {
     this.loading = false; // Always executed
   }
 }
 ```
 
-**React Rendering Issues:**
-
+**React Infinite Renders:**
 ```typescript
-// Bug: Infinite re-renders
+// ❌ BUG
 function Component() {
   const [data, setData] = useState([]);
-
+  
   useEffect(() => {
-    setData([...data, newItem]); // DON'T DO THIS
-  }, [data]); // Triggers on every data change!
+    setData([...data, newItem]); // Triggers on every data change!
+  }, [data]);
 }
 
-// Fix: Use functional update
+// ✅ FIX
 function Component() {
   const [data, setData] = useState([]);
-
+  
   useEffect(() => {
-    setData((prevData) => [...prevData, newItem]);
+    setData(prev => [...prev, newItem]);
   }, []); // Only runs once
 }
 ```
 
 **Memory Leaks:**
-
 ```typescript
-// Bug: Event listener not cleaned up
+// ❌ BUG: Event listener not cleaned up
 useEffect(() => {
-  window.addEventListener("resize", handleResize);
-}, []); // Leak!
+  window.addEventListener('resize', handleResize);
+}, []);
 
-// Fix: Return cleanup function
+// ✅ FIX: Return cleanup
 useEffect(() => {
-  window.addEventListener("resize", handleResize);
-  return () => {
-    window.removeEventListener("resize", handleResize);
-  };
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
 }, []);
 ```
 
 ## Debugging Tools
 
-**Console Debugging:**
-
+**Strategic Logging:**
 ```typescript
-// Strategic console.logs
-console.log("Input:", { userId, params }); // At entry
-console.log("Before query:", query); // Before operation
-console.log("Query result:", result); // After operation
-console.log("Returning:", formatted); // Before return
-```
-
-**Debugger Statements:**
-
-```typescript
-function complexFunction(data: Data) {
-  debugger; // Execution pauses here
-  const processed = processData(data);
-  debugger; // And here
-  return processed;
-}
+console.log('Input:', { userId, params }); // At entry
+console.log('Before query:', query);
+console.log('Query result:', result);
+console.log('Returning:', formatted);
 ```
 
 **Node.js Debugging:**
-
 ```bash
-# Run with inspector
 node --inspect-brk dist/main.js
-
-# Chrome DevTools: chrome://inspect
-# VSCode: Launch configuration
-```
-
-**Browser DevTools:**
-
-- Console for logs and errors
-- Network tab for API calls
-- Performance tab for profiling
-- React DevTools for component tree
-- Redux DevTools for state
-
-**Backend Debugging:**
-
-```typescript
-// Add detailed logging
-@Injectable()
-export class UserService {
-  private logger = new Logger(UserService.name);
-
-  async findById(id: string): Promise<User> {
-    this.logger.debug(`Finding user ${id}`);
-    const user = await this.userRepo.findById(id);
-    this.logger.debug(`Found user: ${user ? "yes" : "no"}`);
-    return user;
-  }
-}
+# Chrome: chrome://inspect
 ```
 
 **Database Debugging:**
-
 ```sql
--- Log query execution time
+-- Analyze query performance
 EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'test@example.com';
 
 -- Check slow queries
@@ -220,160 +119,115 @@ ORDER BY mean_exec_time DESC
 LIMIT 10;
 ```
 
-## Error Analysis
-
-**Stack Trace Reading:**
+## Stack Trace Analysis
 
 ```
 Error: Cannot read property 'id' of undefined
-    at UserService.getProfile (user.service.ts:42:18)
+    at UserService.getProfile (user.service.ts:42:18)  ← ROOT CAUSE
     at UserController.getProfile (user.controller.ts:28:35)
     at Layer.handle (express/lib/router/layer.js:95:5)
 ```
 
-Analysis:
+Read bottom-up to find root cause. Line 42 in user.service.ts is trying to access `.id` on `undefined`.
 
-- Error: Trying to access `.id` on `undefined`
-- Location: `user.service.ts` line 42
-- Called from: `user.controller.ts` line 28
-- Root cause: Missing null check
+## Error Analysis
 
 **HTTP Errors:**
-
-```typescript
-// 404 - Check URL and route definition
-// 400 - Validate request payload
-// 401 - Check authentication
-// 403 - Check authorization
-// 500 - Check server logs for exception
-// 503 - Check service health/dependencies
-```
-
-## Testing During Debug
-
-```typescript
-// Add temporary test
-describe("Bug reproduction", () => {
-  it("should handle undefined user", () => {
-    const service = new UserService(mockRepo);
-    mockRepo.findById.mockResolvedValue(undefined);
-
-    // This should throw or handle gracefully
-    expect(() => service.getProfile("123")).not.toThrow();
-  });
-});
-```
+- **404**: Check URL and route definition
+- **400**: Validate request payload against DTO
+- **401**: Check authentication token
+- **403**: Check authorization/permissions
+- **500**: Check server logs for exception
+- **503**: Check service health/dependencies
 
 ## Performance Debugging
 
 **Frontend:**
-
 ```typescript
-// Profile component rendering
+// Profile rendering
 console.time('Component render');
 const result = expensiveOperation();
 console.timeEnd('Component render');
-
-// Check bundle size
-npm run build -- --stats
-npx webpack-bundle-analyzer dist/stats.json
 ```
 
 **Backend:**
-
 ```typescript
-// Measure function execution
+// Measure operation time
 const start = Date.now();
 await someOperation();
-console.log(`Took ${Date.now() - start}ms`);
-
-// Profile database queries
-import { performance } from "perf_hooks";
-
-const start = performance.now();
-const result = await db.query(sql);
-const duration = performance.now() - start;
+const duration = Date.now() - start;
 if (duration > 100) {
-  logger.warn(`Slow query: ${duration}ms`, { sql });
+  logger.warn(`Slow operation: ${duration}ms`);
 }
 ```
 
-## Common Patterns
-
-**Null Safety:**
-
-```typescript
-// Add null checks
-const profile = user?.profile;
-const name = profile?.name ?? "Unknown";
-```
-
-**Error Boundaries (React):**
-
-```typescript
-class ErrorBoundary extends React.Component {
-  componentDidCatch(error, errorInfo) {
-    console.error('Caught error:', error, errorInfo);
-    // Log to error tracking service
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return <ErrorFallback />;
-    }
-    return this.props.children;
-  }
-}
-```
-
-**Defensive Programming:**
+## Defensive Programming
 
 ```typescript
 function processUser(user: User | undefined) {
   if (!user) {
-    logger.warn("Received undefined user");
-    return null; // or throw
+    logger.warn('Received undefined user');
+    return null;
   }
 
   if (!user.email) {
-    logger.error("User missing email", { userId: user.id });
-    throw new Error("Invalid user data");
+    logger.error('User missing email', { userId: user.id });
+    throw new Error('Invalid user data');
   }
 
-  // Now safe to use user.email
   return sendEmail(user.email);
 }
 ```
 
-## Logging Best Practices
+## Debug Output Format
 
+```markdown
+## Summary
+Brief description of the issue.
+
+## Root Cause
+Detailed explanation of what's causing it and why.
+
+## Location
+- File: `src/users/user.service.ts`
+- Line: 42
+- Function: `getProfile()`
+
+## Fix
 ```typescript
-// Structured logging
-logger.info("User created", {
-  userId: user.id,
-  email: user.email,
-  timestamp: new Date().toISOString(),
-});
+// Before (problematic)
+const user = users.find(u => u.id === id);
+return user.email; // Crashes if user not found
 
-// Log levels
-logger.error("Critical error", { error, context });
-logger.warn("Unexpected condition", { details });
-logger.info("Normal operation", { data });
-logger.debug("Detailed debug info", { state });
+// After (fixed)
+const user = users.find(u => u.id === id);
+if (!user) throw new NotFoundException(`User ${id} not found`);
+return user.email;
+```
+
+## Testing
+1. Test with invalid user ID
+2. Verify proper error response
+3. Check error logging
+
+## Prevention
+- Add null checks after array.find()
+- Use TypeScript strict mode
+- Add test for missing user scenario
 ```
 
 ## Before Debugging
 
 1. Read error message carefully
-2. Check recent changes
+2. Check recent changes (git log)
 3. Review related code
 4. Verify environment configuration
 5. Check logs for patterns
 
-## Escalate When
+## Escalate
 
-- Infrastructure issues beyond application code
-- Database-level problems
-- Third-party service failures
-- Architectural design flaws
-- Security incidents
+- Infrastructure issues → @infrastructure
+- Database-level problems → @database
+- Third-party service failures → Vendor support
+- Architectural design flaws → @architect
+- Security incidents → @security + Security team

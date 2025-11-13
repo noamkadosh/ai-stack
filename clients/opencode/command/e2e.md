@@ -4,28 +4,56 @@ agent: test
 temperature: 0.1
 ---
 
-Generate E2E tests for: **$FEATURE_NAME**
+# Generate E2E Tests: $FEATURE_NAME
 
 $ARGUMENTS
 
 ## Requirements
 
-- Complete user flow (happy path + errors)
+- Complete user flow (happy path + error cases)
 - Page object pattern for reusable selectors
 - Setup/teardown with test data
 - Assertions at each step
-- Screenshots on failure (automatic)
+- Screenshots on failure (automatic with Playwright)
 
-Place in `tests/e2e/` or `e2e/`
+## Test Structure
+
+```typescript
+import { test, expect } from '@playwright/test';
+
+test.describe('Feature Name', () => {
+  test.beforeEach(async ({ page }) => {
+    // Setup: Navigate, login, create test data
+    await page.goto('/feature');
   });
 
   test.afterEach(async ({ page }) => {
-    // Cleanup test data
+    // Cleanup: Delete test data
+  });
+
+  test('happy path: user completes flow successfully', async ({ page }) => {
+    // Step 1: Fill form
+    await page.fill('input[name="email"]', 'test@example.com');
+    await page.fill('input[name="password"]', 'password123');
+    
+    // Step 2: Submit
+    await page.click('button[type="submit"]');
+    
+    // Step 3: Verify success
+    await expect(page).toHaveURL('/success');
+    await expect(page.getByText('Success message')).toBeVisible();
+  });
+
+  test('error: shows validation error for invalid email', async ({ page }) => {
+    await page.fill('input[name="email"]', 'invalid');
+    await page.click('button[type="submit"]');
+    
+    await expect(page.getByText('Invalid email')).toBeVisible();
   });
 });
 ```
 
-## Page Object Pattern (if needed)
+## Page Object Pattern (Optional)
 
 ```typescript
 class FeaturePage {
@@ -50,17 +78,15 @@ class FeaturePage {
 }
 ```
 
-## Test Coverage
+## Coverage
 
-- Happy path (success scenario)
-- Validation errors
-- Authentication failures
-- Network errors (mock failed requests)
-- Loading states
-- Empty states
+- ✅ Happy path (success scenario)
+- ✅ Validation errors
+- ✅ Authentication failures
+- ✅ Network errors (mock failed requests)
+- ✅ Loading states
+- ✅ Empty states
 
-## Additional Context
+## Placement
 
-$ARGUMENTS
-
-Place tests in `tests/e2e/` directory.
+Place in `tests/e2e/` or `e2e/` directory
