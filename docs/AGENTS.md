@@ -62,6 +62,75 @@ Detailed standards are in `code-standards.md` and `security-guidelines.md`. Key 
 
 ---
 
+## Standard Development Workflow
+
+All development tasks follow this standardized workflow from planning through merge:
+
+| Stage | Agent | Key Activities | May Delegate To |
+|-------|-------|----------------|-----------------|
+| **1. PLAN** | OpenCode built-in | Analyze task, review codebase, plan approach, identify risks | @architect, @database, @security, @test |
+| **2. BUILD** | OpenCode built-in | Implement changes, write tests, follow standards | @frontend, @backend, @database, @test |
+| **3. VALIDATE** | BUILD agent | Run tests, linting, type-checking, security audit | @security (for comprehensive audit) |
+| **4. DOCUMENT** | BUILD agent | Update API docs, README, ADRs, code comments (skip for minor fixes) | @documentation |
+| **5. COMMIT** | Main agent (you) | Commit with conventional format (`feat:`, `fix:`, etc.), push to remote | - |
+| **6. OPEN PR** | Main agent (you) | Create PR with `gh pr create`, describe changes, testing steps | - |
+| **7. REVIEW LOOP** | Main agent (you) | User reviews → agent updates → repeat until approved | Domain specialists as needed |
+| **8. MERGE** | User or you | **Squash merge** to main, delete branch, verify CI/CD | - |
+
+**Workflow Diagram**:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  1. PLAN                                                    │
+│     • Analyze task                                          │
+│     • Plan approach (may delegate to specialists)           │
+└────────────────────────┬────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│  2. BUILD                                                   │
+│     • Implement changes (may delegate to specialists)       │
+│     • Write tests                                           │
+└────────────────────────┬────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│  3. VALIDATE                                                │
+│     • Run tests, linting, type-checking                     │
+│     • Security audit                                        │
+└────────────────────────┬────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│  4. DOCUMENT                                                │
+│     • Update docs, ADRs, comments                           │
+└────────────────────────┬────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│  5. COMMIT                                                  │
+│     • Commit with conventional format                       │
+│     • Push to remote                                        │
+└────────────────────────┬────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│  6. OPEN PR                                                 │
+│     • Create PR with gh CLI                                 │
+│     • Describe changes, testing steps                       │
+└────────────────────────┬────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│  7. REVIEW LOOP ←──────────────┐                            │
+│     • User reviews              │                            │
+│     • Agent updates             │                            │
+│     • Repeat until approved ────┘                            │
+└────────────────────────┬────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│  8. MERGE                                                   │
+│     • Squash merge to main                                  │
+│     • Delete branch                                         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Delegation Strategy
 
 ### When to Delegate
