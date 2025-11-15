@@ -127,6 +127,10 @@
         "write": true,
         "edit": true,
         "bash": true,
+        "read": true,
+        "grep": true,
+        "glob": true,
+        "list": true,
         "webfetch": true
       },
       "permission": {
@@ -192,6 +196,10 @@
         "write": false,
         "edit": false,
         "bash": true,
+        "read": true,
+        "grep": true,
+        "glob": true,
+        "list": true,
         "webfetch": true
       },
       "permission": {
