@@ -2,7 +2,7 @@
 
 Documentation for the 11 MCP servers configured in this repository's catalog (`mcp/docker/servers-catalog.yaml`).
 
-**Last Updated**: November 12, 2025  
+**Last Updated**: November 14, 2025  
 **Gateway**: Single gateway with dynamic tool loading  
 **Total Servers**: 11
 
@@ -10,6 +10,7 @@ Documentation for the 11 MCP servers configured in this repository's catalog (`m
 
 ## Table of Contents
 
+- [How Agents Use MCP Servers](#how-agents-use-mcp-servers)
 - [Overview](#overview)
 - [Server List](#server-list)
 - [Detailed Documentation](#detailed-documentation)
@@ -29,23 +30,171 @@ Documentation for the 11 MCP servers configured in this repository's catalog (`m
 
 ---
 
+## How Agents Use MCP Servers
+
+### Direct Tool Invocation
+
+**You already have access to all MCP tools!** OpenCode automatically runs the MCP Gateway in the background, making all server tools available without manual setup.
+
+**To use an MCP server tool:**
+1. Simply call the tool using the `MCP_DOCKER_mcp-exec` function
+2. The Gateway automatically starts the server container if needed
+3. The tool executes and returns results
+
+**Example - Using GitHub MCP Server:**
+```typescript
+// List pull requests
+await MCP_DOCKER_mcp-exec({
+  name: "list_pull_requests",
+  arguments: {
+    owner: "docker",
+    repo: "docs",
+    state: "open"
+  }
+});
+
+// Create a pull request
+await MCP_DOCKER_mcp-exec({
+  name: "create_pull_request",
+  arguments: {
+    owner: "myuser",
+    repo: "myrepo",
+    title: "Add feature X",
+    head: "feature-branch",
+    base: "main",
+    body: "Description of changes"
+  }
+});
+```
+
+**Example - Using Memory MCP Server:**
+```typescript
+// Store knowledge
+await MCP_DOCKER_mcp-exec({
+  name: "create_entities",
+  arguments: {
+    entities: [{
+      name: "coding_pattern_authentication",
+      entityType: "code_pattern",
+      observations: [
+        "Always use bcrypt for password hashing",
+        "JWT tokens expire in 24h",
+        "Implemented in src/auth/auth.service.ts"
+      ]
+    }]
+  }
+});
+
+// Search knowledge
+await MCP_DOCKER_mcp-exec({
+  name: "search_nodes",
+  arguments: {
+    query: "authentication",
+    searchType: "type"
+  }
+});
+```
+
+### Server Lifecycle (Automatic)
+
+The MCP Gateway handles everything:
+1. **First tool call**: Gateway starts the server container
+2. **Subsequent calls**: Reuses running container (fast!)
+3. **Idle timeout**: Container stops automatically after 10 minutes of inactivity
+4. **Dynamic loading**: Only active servers consume resources
+
+### Available CLI Commands
+
+**Check server status:**
+```bash
+docker mcp server list
+```
+
+**Enable/disable servers:**
+```bash
+# Enable a server
+docker mcp server enable github-official
+
+# Disable a server
+docker mcp server disable github-official
+```
+
+**View available tools:**
+```bash
+# List all tools from all servers
+docker mcp tool ls
+
+# List tools from specific server
+docker mcp tool ls github-official
+```
+
+**Gateway management:**
+```bash
+# Start gateway
+docker mcp gateway run --catalog mcp-servers
+
+# Check gateway status
+docker ps | grep mcp-gateway
+```
+
+### Troubleshooting
+
+**"Tool not found" error:**
+1. Check if server is enabled: `docker mcp server list`
+2. Enable if needed: `docker mcp server enable <server-name>`
+3. Verify tool exists: `docker mcp tool ls <server-name>`
+
+**Server not responding:**
+1. Check logs: `docker logs <container-name>`
+2. Restart Gateway: OpenCode will restart it automatically
+3. Check secrets configured: `docker secret ls`
+
+---
+
 ## Overview
 
 This repository uses Docker MCP Gateway with **dynamic tool loading** enabled. All MCP servers are available to all agents, but containers only run when tools are actively being used.
 
 ### Architecture
 
-- **Gateway**: Single instance serving all agents
+- **Gateway**: Single instance serving all agents via Docker MCP CLI
 - **Transport**: Managed by OpenCode via `docker mcp gateway run --catalog mcp-servers`
 - **Dynamic Loading**: Servers spin up/down automatically based on tool usage
 - **Configuration**: Defined in `mcp/docker/servers-catalog.yaml`
+- **Tool Access**: Use `MCP_DOCKER_mcp-exec` to invoke any tool from any enabled server
 
 ### Key Benefits
 
-- **Resource Efficient**: Servers only run when needed
-- **Full Capability**: All agents can access all tools
-- **Zero Management**: No manual server start/stop required
-- **Isolated Execution**: Each server runs in its own container
+- **Resource Efficient**: Servers only run when needed (10-minute idle timeout)
+- **Full Capability**: All agents can access all tools from all enabled servers
+- **Zero Management**: No manual server start/stop required (fully automatic)
+- **Isolated Execution**: Each server runs in its own container with resource limits
+- **Automatic Authentication**: Gateway injects credentials from Docker secrets
+
+### How the Gateway Works
+
+```
+┌─────────────┐          ┌──────────────────┐          ┌─────────────────┐
+│   Agent     │          │   MCP Gateway    │          │   MCP Servers   │
+│  (OpenCode) │───────>  │   (Proxy)        │───────>  │  (Containers)   │
+└─────────────┘          └──────────────────┘          └─────────────────┘
+                              │                              │
+                              │  1. Tool request             │
+                              │  2. Start container (if off)  │
+                              │  3. Inject secrets            │
+                              │  4. Forward request           │
+                              │  5. Return result             │
+                              │  6. Log call trace            │
+```
+
+**Request Flow:**
+1. Agent calls tool using `MCP_DOCKER_mcp-exec`
+2. Gateway identifies which server provides that tool
+3. Gateway starts server container if not running (< 1 second)
+4. Gateway injects required credentials from Docker secrets
+5. Gateway forwards tool request to server
+6. Server executes tool and returns result
+7. Gateway logs activity and returns result to agent
 
 ---
 
@@ -635,6 +784,69 @@ docker stats
 
 ## Quick Reference
 
+### Docker MCP CLI Commands (For Agents)
+
+**Server Management:**
+```bash
+# List all configured servers
+docker mcp server list
+
+# Enable/disable servers
+docker mcp server enable <server-name>
+docker mcp server disable <server-name>
+
+# Show server details
+docker mcp server show <server-name>
+```
+
+**Tool Discovery:**
+```bash
+# List all available tools
+docker mcp tool ls
+
+# List tools from specific server
+docker mcp tool ls <server-name>
+
+# Show tool details
+docker mcp tool show <tool-name>
+```
+
+**Gateway Management:**
+```bash
+# Run gateway (OpenCode does this automatically)
+docker mcp gateway run --catalog mcp-servers
+
+# Check gateway status
+docker ps | grep mcp-gateway
+
+# View gateway logs
+docker logs mcp-gateway
+```
+
+**Secrets Management:**
+```bash
+# List configured secrets
+docker secret ls
+
+# Create new secret
+echo "your_secret" | docker secret create service.api_key -
+
+# Delete secret
+docker secret rm service.api_key
+```
+
+**Container Monitoring:**
+```bash
+# View running MCP containers
+docker ps | grep mcp
+
+# View server logs
+docker logs <container-id>
+
+# Monitor resource usage
+docker stats $(docker ps -q --filter "label=com.docker.mcp.server")
+```
+
 ### Server Images
 
 ```bash
@@ -702,7 +914,7 @@ docker run --rm -i \
   ghcr.io/github/github-mcp-server
 ```
 
-### Common Commands
+### Catalog Management Commands
 
 ```bash
 # Create catalog
@@ -711,17 +923,85 @@ docker mcp catalog create mcp-servers
 # Import server definitions
 docker mcp catalog import ./mcp/docker/servers-catalog.yaml
 
-# Show catalog
+# Show catalog contents
 docker mcp catalog show mcp-servers
 
-# Run gateway
-docker mcp gateway run --catalog mcp-servers
+# Export catalog
+docker mcp catalog export mcp-servers > servers-backup.yaml
+```
 
-# Enable dynamic tools
+### Feature Flags
+
+```bash
+# Enable dynamic tool loading (recommended)
 docker mcp feature enable dynamic-tools
 
-# Check feature status
+# Check which features are enabled
 docker mcp feature ls
+
+# Disable dynamic tools
+docker mcp feature disable dynamic-tools
+```
+
+### Practical Tool Invocation Examples
+
+**Using MCP tools from agents:**
+
+```typescript
+// GitHub: Create PR
+MCP_DOCKER_mcp-exec({
+  name: "create_pull_request",
+  arguments: {
+    owner: "myuser",
+    repo: "myrepo",
+    title: "Fix: bug in authentication",
+    head: "fix/auth-bug",
+    base: "main",
+    body: "Fixed authentication bug by..."
+  }
+})
+
+// Memory: Store pattern
+MCP_DOCKER_mcp-exec({
+  name: "create_entities",
+  arguments: {
+    entities: [{
+      name: "api_rate_limiting_pattern",
+      entityType: "code_pattern",
+      observations: [
+        "Use @Throttle(10, 60) decorator",
+        "10 requests per 60 seconds",
+        "Implemented in all login endpoints"
+      ]
+    }]
+  }
+})
+
+// Code Index: Search code
+MCP_DOCKER_mcp-exec({
+  name: "search_code_advanced",
+  arguments: {
+    query: "function.*login",
+    searchType: "regex",
+    filePattern: "*.ts"
+  }
+})
+
+// Obsidian: Read ADR
+MCP_DOCKER_mcp-exec({
+  name: "obsidian_get_file_contents",
+  arguments: {
+    path: "ADRs/001-authentication-strategy.md"
+  }
+})
+
+// Playwright: E2E test
+MCP_DOCKER_mcp-exec({
+  name: "browser_navigate",
+  arguments: {
+    url: "http://localhost:3000/login"
+  }
+})
 ```
 
 ---
