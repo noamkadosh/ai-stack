@@ -6,11 +6,7 @@
   "share": "disabled",
   "instructions": [
     "AGENTS.md",
-    "./docs/*.md",
-    "~/Developer/dotfiles/ai/docs/*.md",
-    "packages/*/AGENTS.md",
-    ".cursor/rules/*.md",
-    "CONTRIBUTING.md"
+    "docs/*.md"
   ],
   "tools": {
     "write": true,

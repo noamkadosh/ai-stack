@@ -23,7 +23,7 @@ cd mcp/servers/code-index-mcp && docker build -t local/code-index-mcp:latest .
   - `agent/*.md` - 10 specialized agent definitions
   - `command/*.md` - 8 custom slash commands
 - `mcp/docker/servers-catalog.yaml` - MCP server definitions (11 servers)
-- `docs/` - CODE_STRANDARDS.md, SECURITY_GUIDLENIES.md, MCP_SERVERS.md
+- `docs/` - CODE_STANDARDS.md, SECURITY_GUIDELINES.md, MCP_SERVERS.md
 - `mcp/servers/` - Custom MCP servers (**DO NOT EDIT** - submodules)
 
 ## Code Standards (for projects using this config)
@@ -53,5 +53,6 @@ git commit -m "docs: update MCP server catalog with new tools"
 - This repo has **no code to test/build** - only YAML/JSON/Markdown configs
 - `mcp/servers/*` are git submodules - **DO NOT** edit or analyze them
 - Changes to `clients/opencode/*` are immediately reflected via stow symlinks
-- See `docs/CODE_STRANDARDS.md` for comprehensive coding standards (for projects using this config)
+- See `docs/CODE_STANDARDS.md` for comprehensive coding standards (for projects using this config)
+- See `docs/SECURITY_GUIDELINES.md` for security best practices
 - See `docs/MCP_SERVERS.md` for MCP server reference documentation

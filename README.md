@@ -197,8 +197,8 @@ ai/
 │
 ├── docs/                      # General documentation (applies to all projects)
 │   ├── MCP_SERVERS.md         # Server reference documentation
-│   ├── CODE_STRANDARDS.md     # TypeScript/React/NestJS standards
-│   ├── SECURITY_GUIDLENIES.md # Security best practices
+│   ├── CODE_STANDARDS.md      # TypeScript/React/NestJS standards
+│   ├── SECURITY_GUIDELINES.md # Security best practices
 │   └── RESEARCH_TASK_VS_DOMAIN_AGENTS.md  # Agent architecture research
 │
 └── README.md                  # This file
@@ -386,7 +386,7 @@ docker logs -f <container-id>
 - **GitHub Tokens**: Use fine-grained tokens with minimum required scopes
 - **Network Access**: MCP servers run in isolated containers with controlled network access
 
-See [docs/security-guidelines.md](docs/security-guidelines.md) for comprehensive security practices.
+See [docs/SECURITY_GUIDELINES.md](docs/SECURITY_GUIDELINES.md) for comprehensive security practices.
 
 ## Advanced Configuration
 
