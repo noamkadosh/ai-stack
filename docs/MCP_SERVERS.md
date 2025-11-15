@@ -32,122 +32,72 @@ Documentation for the 11 MCP servers configured in this repository's catalog (`m
 
 ## How Agents Use MCP Servers
 
-### Direct Tool Invocation
+### Quick Start (3 Steps)
 
-**You already have access to all MCP tools!** OpenCode automatically runs the MCP Gateway in the background, making all server tools available without manual setup.
-
-**To use an MCP server tool:**
-1. Simply call the tool using the `MCP_DOCKER_mcp-exec` function
-2. The Gateway automatically starts the server container if needed
-3. The tool executes and returns results
-
-**Example - Using GitHub MCP Server:**
+**1. Find the server:**
 ```typescript
-// List pull requests
-await MCP_DOCKER_mcp-exec({
-  name: "list_pull_requests",
-  arguments: {
-    owner: "docker",
-    repo: "docs",
-    state: "open"
-  }
-});
-
-// Create a pull request
-await MCP_DOCKER_mcp-exec({
-  name: "create_pull_request",
-  arguments: {
-    owner: "myuser",
-    repo: "myrepo",
-    title: "Add feature X",
-    head: "feature-branch",
-    base: "main",
-    body: "Description of changes"
-  }
-});
+MCP_DOCKER_mcp-find({ query: "github" })
+// Returns: github-official server details
 ```
 
-**Example - Using Memory MCP Server:**
+**2. Add and activate the server:**
 ```typescript
-// Store knowledge
-await MCP_DOCKER_mcp-exec({
+MCP_DOCKER_mcp-add({
+  name: "github-official",
+  activate: true  // Makes tools immediately available
+})
+```
+
+**3. Use the tools:**
+```typescript
+// Now you can use any tool from that server
+MCP_DOCKER_mcp-exec({
+  name: "list_pull_requests",
+  arguments: { owner: "myuser", repo: "myrepo", state: "open" }
+})
+```
+
+### Common Use Cases
+
+**GitHub - Create PR:**
+```typescript
+MCP_DOCKER_mcp-exec({
+  name: "create_pull_request",
+  arguments: {
+    owner: "myuser", repo: "myrepo",
+    title: "Fix: bug in authentication",
+    head: "fix/auth-bug", base: "main",
+    body: "Fixed authentication bug by..."
+  }
+})
+```
+
+**Memory - Store Pattern:**
+```typescript
+MCP_DOCKER_mcp-exec({
   name: "create_entities",
   arguments: {
     entities: [{
-      name: "coding_pattern_authentication",
-      entityType: "code_pattern",
-      observations: [
-        "Always use bcrypt for password hashing",
-        "JWT tokens expire in 24h",
-        "Implemented in src/auth/auth.service.ts"
-      ]
+      name: "auth_pattern", entityType: "code_pattern",
+      observations: ["Use bcrypt for passwords", "JWT expires in 24h"]
     }]
   }
-});
-
-// Search knowledge
-await MCP_DOCKER_mcp-exec({
-  name: "search_nodes",
-  arguments: {
-    query: "authentication",
-    searchType: "type"
-  }
-});
+})
 ```
 
-### Server Lifecycle (Automatic)
-
-The MCP Gateway handles everything:
-1. **First tool call**: Gateway starts the server container
-2. **Subsequent calls**: Reuses running container (fast!)
-3. **Idle timeout**: Container stops automatically after 10 minutes of inactivity
-4. **Dynamic loading**: Only active servers consume resources
-
-### Available CLI Commands
-
-**Check server status:**
-```bash
-docker mcp server list
-```
-
-**Enable/disable servers:**
-```bash
-# Enable a server
-docker mcp server enable github-official
-
-# Disable a server
-docker mcp server disable github-official
-```
-
-**View available tools:**
-```bash
-# List all tools from all servers
-docker mcp tool ls
-
-# List tools from specific server
-docker mcp tool ls github-official
-```
-
-**Gateway management:**
-```bash
-# Start gateway
-docker mcp gateway run --catalog mcp-servers
-
-# Check gateway status
-docker ps | grep mcp-gateway
+**Code Index - Search:**
+```typescript
+MCP_DOCKER_mcp-exec({
+  name: "search_code_advanced",
+  arguments: { query: "function.*login", searchType: "regex" }
+})
 ```
 
 ### Troubleshooting
 
-**"Tool not found" error:**
-1. Check if server is enabled: `docker mcp server list`
-2. Enable if needed: `docker mcp server enable <server-name>`
-3. Verify tool exists: `docker mcp tool ls <server-name>`
-
-**Server not responding:**
-1. Check logs: `docker logs <container-name>`
-2. Restart Gateway: OpenCode will restart it automatically
-3. Check secrets configured: `docker secret ls`
+- **Tool not found**: `MCP_DOCKER_mcp-add({ name: "server-name", activate: true })`
+- **Check status**: View active servers in OpenCode MCP panel
+- **View tools**: See detailed server documentation below
 
 ---
 
