@@ -98,12 +98,12 @@ export const Primary: Story = {
 2. No `React.createElement()` unless initializing app
 3. Use fragments instead of extra divs
 4. Keep components under 120 lines (body only)
-5. Define Props interface for all components
-6. Move side effects out of render methods
-7. Don't edit props within components
-8. Avoid multiple if/else blocks in render
-9. Don't use index as key prop
-10. Move reusable code to common space (if used in 2+ places)
+5. Define Props interface for all components.
+6. Move side effects out of render methods.
+7. Don't edit props within components.
+8. Avoid multiple if/else blocks in render.
+9. Don't use index as key prop.
+10. Move reusable code to common space (if used in 2+ places).
 
 ## Server vs Client Components (NextJS)
 
@@ -195,43 +195,43 @@ const HeavyComponent = lazy(() => import('./HeavyComponent'));
 <MyComponent variant="fancy" userName="hello" phoneNumber={12345678} />
 ```
 
-## Accessibility (WCAG)
+## Accessibility (WCAG 2.1)
 
 ### Critical Rules
 
 1. **Use appropriate DOM elements**
-   - `<a>` for links, `<button>` for buttons
-   - No `<div>` or `<span>` if semantic tag exists
+   - `<a>` for links, `<button>` for buttons.
+   - No `<div>` or `<span>` if semantic tag exists.
 
 2. **Keyboard Navigation**
-   - Maintain logical tab-order
-   - Use `tabindex` only when necessary
-   - All interactive elements must be keyboard accessible
+   - Maintain logical tab-order.
+   - Use `tabindex` only when necessary.
+   - All interactive elements must be keyboard accessible.
 
 3. **Form Elements**
-   - Add `<label>` to all form fields with unique IDs
-   - Wrap form controls in `<form>` tags
+   - Add `<label>` to all form fields with unique IDs.
+   - Wrap form controls in `<form>` tags.
    ```tsx
    <label htmlFor="email">Email</label>
    <input id="email" type="email" name="email" />
    ```
 
 4. **Heading Hierarchy**
-   - Use `<h1>`-`<h4>` in logical hierarchy
-   - Add unique IDs to headings for direct linking
+   - Use `<h1>`-`<h4>` in logical hierarchy.
+   - Add unique IDs to headings for direct linking.
 
 5. **Images & Links**
-   - All `<img>` tags need meaningful `alt` attribute
-   - All `<a>` tags need meaningful text or `title` attribute
+   - All `<img>` tags need meaningful `alt` attribute.
+   - All `<a>` tags need meaningful text or `title` attribute.
    ```tsx
    <img src="logo.png" alt="Company logo" />
    <a href="/about" title="About us">Learn more</a>
    ```
 
 6. **ARIA Attributes**
-   - Buttons opening popups need `aria-haspopup` attribute
-   - Popups should gain focus on open
-   - Use `aria-label` for icon-only buttons
+   - Buttons opening popups need `aria-haspopup` attribute.
+   - Popups should gain focus on open.
+   - Use `aria-label` for icon-only buttons.
    ```tsx
    <button aria-label="Close dialog" onClick={handleClose}>
      <CloseIcon />
@@ -239,12 +239,12 @@ const HeavyComponent = lazy(() => import('./HeavyComponent'));
    ```
 
 7. **Focus Styles**
-   - All focusable elements need distinguishable `:focus` style
-   - Don't remove outline without replacement
+   - All focusable elements need distinguishable `:focus` style.
+   - Don't remove outline without replacement.
 
 8. **Dynamic Content**
-   - Auto-updating content needs manual update method
-   - Use `aria-live` for screen reader announcements
+   - Auto-updating content needs manual update method.
+   - Use `aria-live` for screen reader announcements.
 
 **Reference:** [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
 

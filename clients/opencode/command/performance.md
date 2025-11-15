@@ -68,7 +68,7 @@ SELECT * FROM users WHERE email = 'test@example.com';
 
 ### Recommendations
 
-#### Quick Wins (Easy + High Impact)
+### Quick Wins (Easy + High Impact)
 
 **Database N+1 Queries:**
 ```typescript
@@ -125,7 +125,7 @@ import { debounce } from 'lodash-es'; // 2KB
 const Dashboard = lazy(() => import('./Dashboard'));
 ```
 
-#### Medium Effort
+### Medium Effort
 
 **Caching:**
 ```typescript
@@ -147,7 +147,7 @@ CREATE INDEX idx_posts_user_published
 ON posts(user_id, published, created_at DESC);
 ```
 
-#### Long-term
+### Long-term
 1. Implement CDN for static assets
 2. Database read replicas
 3. Horizontal scaling (load balancer)
