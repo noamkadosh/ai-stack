@@ -2,6 +2,17 @@
 
 This is a **configuration-only repository** for OpenCode/MCP setup. No build/test commands exist for this repo itself.
 
+## ⚠️ CRITICAL: Never Work on Main Branch
+
+**BEFORE ANY WORK:**
+1. Check current branch: `git branch --show-current`
+2. If on `main`:
+   - Create new branch: `git checkout -b feature/descriptive-name` OR
+   - Checkout existing branch: `git checkout branch-name`
+3. **NEVER commit directly to main**
+
+**Branch naming**: `feature/`, `fix/`, `docs/`, `chore/`
+
 ## Key Commands
 
 ```bash
