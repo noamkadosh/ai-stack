@@ -9,6 +9,10 @@ tools:
   edit: true
   bash: true
   read: true
+  grep: true
+  glob: true
+  list: true
+  webfetch: true
 ---
 
 # Database Specialist

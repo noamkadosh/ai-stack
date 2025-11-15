@@ -7,8 +7,29 @@ topP: 0.95
 tools:
   write: true
   edit: true
-  bash: false
+  bash: true
   read: true
+  grep: true
+  glob: true
+  list: true
+  webfetch: true
+permission:
+  bash:
+    "git status": "allow"
+    "git diff*": "allow"
+    "git log*": "allow"
+    "git branch*": "allow"
+    "git show*": "allow"
+    "ls*": "allow"
+    "cat*": "allow"
+    "head*": "allow"
+    "tail*": "allow"
+    "tree*": "allow"
+    "find*": "allow"
+    "grep*": "allow"
+    "git push*": "deny"
+    "git commit*": "deny"
+    "*": "ask"
 ---
 
 # Documentation Specialist

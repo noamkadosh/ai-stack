@@ -7,11 +7,52 @@ topP: 0.9
 tools:
   write: false
   edit: false
-  bash: false
+  bash: true
   read: true
+  grep: true
+  glob: true
+  list: true
+  webfetch: true
 permission:
   edit: deny
-  bash: deny
+  bash:
+    "git status": "allow"
+    "git diff*": "allow"
+    "git log*": "allow"
+    "git branch*": "allow"
+    "git show*": "allow"
+    "whoami*": "allow"
+    "find*": "allow"
+    "sort*": "allow"
+    "cd*": "allow"
+    "echo*": "allow"
+    "ls*": "allow"
+    "pwd*": "allow"
+    "cat*": "allow"
+    "head*": "allow"
+    "tail*": "allow"
+    "uname*": "allow"
+    "id*": "allow"
+    "env*": "allow"
+    "printenv*": "allow"
+    "df*": "allow"
+    "free*": "allow"
+    "ps*": "allow"
+    "grep*": "allow"
+    "uniq*": "allow"
+    "wc*": "allow"
+    "diff*": "allow"
+    "tree*": "allow"
+    "type*": "allow"
+    "hostname*": "allow"
+    "which*": "allow"
+    "awk*": "allow"
+    "git push*": "deny"
+    "git commit*": "deny"
+    "git add*": "deny"
+    "npm install*": "deny"
+    "rm -rf*": "deny"
+    "*": "ask"
 ---
 
 # System Architect

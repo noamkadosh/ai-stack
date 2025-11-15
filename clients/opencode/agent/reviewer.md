@@ -9,9 +9,38 @@ tools:
   edit: false
   bash: true
   read: true
+  grep: true
+  glob: true
+  list: true
+  webfetch: true
 permission:
   edit: deny
-  bash: ask
+  bash:
+    "git status": "allow"
+    "git diff*": "allow"
+    "git log*": "allow"
+    "git branch*": "allow"
+    "git show*": "allow"
+    "whoami*": "allow"
+    "find*": "allow"
+    "sort*": "allow"
+    "cd*": "allow"
+    "ls*": "allow"
+    "pwd*": "allow"
+    "cat*": "allow"
+    "head*": "allow"
+    "tail*": "allow"
+    "grep*": "allow"
+    "uniq*": "allow"
+    "wc*": "allow"
+    "diff*": "allow"
+    "tree*": "allow"
+    "which*": "allow"
+    "awk*": "allow"
+    "git push*": "deny"
+    "git commit*": "deny"
+    "git add*": "deny"
+    "*": "ask"
 ---
 
 # Code Reviewer

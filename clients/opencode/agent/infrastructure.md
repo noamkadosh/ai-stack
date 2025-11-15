@@ -9,8 +9,12 @@ tools:
   edit: true
   bash: true
   read: true
+  grep: true
+  glob: true
+  list: true
+  webfetch: true
 permission:
-  bash: ask
+  bash: "ask"
 ---
 
 # Infrastructure Specialist

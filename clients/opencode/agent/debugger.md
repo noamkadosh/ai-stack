@@ -9,9 +9,13 @@ tools:
   edit: true
   bash: true
   read: true
+  grep: true
+  glob: true
+  list: true
+  webfetch: true
 permission:
-  edit: ask
-  bash: ask
+  edit: "ask"
+  bash: "ask"
 ---
 
 # Debugger Specialist
