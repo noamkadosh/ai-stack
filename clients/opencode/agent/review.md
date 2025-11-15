@@ -8,20 +8,48 @@ tools:
   write: false
   edit: false
   bash: true
+  read: true
+  grep: true
+  glob: true
+  list: true
+  webfetch: true
 permission:
+  webfetch: "allow"
   bash:
-    "git diff*": allow
-    "git log*": allow
-    "git status": allow
-    "npm test*": allow
-    "npm run test*": allow
-    "sed*": deny
-    "awk*": deny
-    "export*": deny
-    "alias*": deny
-    "unalias*": deny
-    "rm -rf*": deny
-    "*": ask
+    "git status": "allow"
+    "git diff*": "allow"
+    "git log*": "allow"
+    "git branch*": "allow"
+    "git show*": "allow"
+    "npm test*": "allow"
+    "npm run test*": "allow"
+    "whoami*": "allow"
+    "find*": "allow"
+    "sort*": "allow"
+    "cd*": "allow"
+    "echo*": "allow"
+    "ls*": "allow"
+    "pwd*": "allow"
+    "cat*": "allow"
+    "head*": "allow"
+    "tail*": "allow"
+    "grep*": "allow"
+    "uniq*": "allow"
+    "wc*": "allow"
+    "diff*": "allow"
+    "tree*": "allow"
+    "which*": "allow"
+    "awk*": "allow"
+    "sed*": "deny"
+    "export*": "deny"
+    "alias*": "deny"
+    "unalias*": "deny"
+    "rm -rf*": "deny"
+    "git push*": "deny"
+    "git commit*": "deny"
+    "git add*": "deny"
+    "npm install": "deny"
+    "*": "ask"
 ---
 
 # Review Mode Instructions

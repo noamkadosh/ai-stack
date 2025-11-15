@@ -8,24 +8,55 @@ tools:
   write: true
   edit: true
   bash: true
+  read: true
+  grep: true
+  glob: true
+  list: true
+  webfetch: true
 permission:
-  edit: ask
+  edit: "ask"
+  webfetch: "allow"
   bash:
-    "git diff*": allow
-    "git status": allow
-    "git log*": allow
-    "npm test*": allow
-    "npm run test*": allow
-    "sed*": deny
-    "awk*": deny
-    "export*": deny
-    "alias*": deny
-    "unalias*": deny
-    "rm -rf*": deny
-    "npm run*": deny
-    "docker*": deny
-    "npm publish*": deny
-    "*": ask
+    "git status": "allow"
+    "git diff*": "allow"
+    "git log*": "allow"
+    "git branch*": "allow"
+    "git show*": "allow"
+    "npm test*": "allow"
+    "npm run test*": "allow"
+    "whoami*": "allow"
+    "find*": "allow"
+    "sort*": "allow"
+    "cd*": "allow"
+    "echo*": "allow"
+    "ls*": "allow"
+    "pwd*": "allow"
+    "cat*": "allow"
+    "head*": "allow"
+    "tail*": "allow"
+    "uname*": "allow"
+    "id*": "allow"
+    "env*": "allow"
+    "printenv*": "allow"
+    "df*": "allow"
+    "free*": "allow"
+    "ps*": "allow"
+    "grep*": "allow"
+    "uniq*": "allow"
+    "wc*": "allow"
+    "diff*": "allow"
+    "tree*": "allow"
+    "type*": "allow"
+    "hostname*": "allow"
+    "which*": "allow"
+    "awk*": "allow"
+    "sed*": "deny"
+    "export*": "deny"
+    "alias*": "deny"
+    "unalias*": "deny"
+    "rm -rf*": "deny"
+    "git push*": "deny"
+    "*": "ask"
 ---
 
 # Debug Mode Instructions
