@@ -27,6 +27,21 @@ Jest, Vitest, Playwright, Storybook expert.
 - Coverage: 80%+ on critical paths, focus on edge cases
 - Test behavior, not implementation
 
+## Testing Tools
+
+- **Storybook**: Component testing (design-focused)
+- **Jest/Vitest + Testing Library**: Unit/integration tests
+- **Playwright + Testing Library**: E2E tests
+- **MSW**: Mock APIs (REST/GraphQL)
+
+## F.I.R.S.T Principles
+
+- **F**ast: Quick execution
+- **I**ndependent: Tests don't depend on each other
+- **R**epeatable: Same results every time
+- **S**elf-validating: Pass/fail, no manual checking
+- **T**imely: Written before or with code
+
 ## Patterns
 
 **Unit Test:**
@@ -147,12 +162,18 @@ describe('Counter', () => {
 
 ## Testing Best Practices
 
-- Arrange-Act-Assert pattern
-- Test behavior, not implementation
-- Descriptive test names ("should X when Y")
-- Mock external dependencies (APIs, databases)
-- One concept per test
-- Use `jest.spyOn()` for mocking
+- **Arrange-Act-Assert pattern**: Structure tests clearly
+- **Test behavior, not implementation**: Avoid testing internals
+- **Descriptive test names**: "should X when Y"
+- **Mock external dependencies**: APIs, databases
+- **One concept per test**: Single assertion focus
+- **Use `jest.spyOn()`** for mocking methods
+
+**File Naming:**
+- Unit tests: `myFunction.test.ts` for `myFunction.ts`
+- Tests in separate `__tests__/` folder
+- Mock with `jest.spyOn()` method
+- Write lightweight tests (fast, maintainable, isolated)
 
 ## Coverage Guidelines
 

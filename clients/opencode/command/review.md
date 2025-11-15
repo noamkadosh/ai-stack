@@ -56,6 +56,73 @@ Overall recommendations and refactoring suggestions.
 - ☐ Approved with comments
 - ☐ Request changes (explain why)
 
+## Common Issues to Check
+
+**Type Safety:**
+```typescript
+// ❌ UNSAFE
+function processData(data: any) { ... }
+
+// ✅ TYPE SAFE
+function processData(data: User): UserDto { ... }
+```
+
+**Error Handling:**
+```typescript
+// ❌ SWALLOWING ERRORS
+try {
+  await operation();
+} catch (e) {
+  console.log(e);
+}
+
+// ✅ PROPER HANDLING
+try {
+  await operation();
+} catch (error) {
+  logger.error('Operation failed', { error });
+  throw new ServiceException('Operation failed', error);
+}
+```
+
+**React Hooks:**
+```typescript
+// ❌ MISSING DEPENDENCY
+useEffect(() => {
+  fetchData(userId);
+}, []); // userId missing!
+
+// ✅ COMPLETE DEPENDENCIES
+useEffect(() => {
+  fetchData(userId);
+}, [userId]);
+```
+
+**Async/Await:**
+```typescript
+// ❌ NOT AWAITING
+async function getUser(id: string) {
+  const user = this.repo.findById(id); // Missing await!
+  return user;
+}
+
+// ✅ PROPERLY AWAITED
+async function getUser(id: string): Promise<User> {
+  const user = await this.repo.findById(id);
+  if (!user) throw new NotFoundException();
+  return user;
+}
+```
+
+**Imports/Exports:**
+```typescript
+// ❌ BAD - Default exports
+export default MyComponent;
+
+// ✅ GOOD - Named exports
+export const MyComponent = ...;
+```
+
 ## Example Issue Format
 
 ```markdown

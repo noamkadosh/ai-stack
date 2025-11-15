@@ -219,15 +219,35 @@ jobs:
 
 ## Best Practices
 
-**Docker:**
+**Docker Security:**
 - Use specific tags, not `latest`
 - Multi-stage builds for smaller images
 - Leverage layer caching
-- Run as non-root user
+- **Run as non-root user** (critical security)
 - Scan images for vulnerabilities
 - Use .dockerignore
+- Use official, minimal base images (alpine)
 
-**AWS:**
+**Container Security Example:**
+```dockerfile
+# Use official, minimal base images
+FROM node:20-alpine
+
+# Don't run as root
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+USER nodejs
+
+# Copy with correct ownership
+COPY --chown=nodejs:nodejs . .
+```
+
+**Network Security:**
+- **Firewall rules**: Allow only necessary ports
+- **VPC**: Isolate resources in private networks
+- **Security groups**: Minimal ingress/egress rules
+- **TLS everywhere** (internal services too)
+
+**AWS Security:**
 - Use IAM roles, not credentials
 - Enable CloudWatch logs
 - Tag all resources

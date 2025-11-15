@@ -87,6 +87,65 @@ class FeaturePage {
 - ✅ Loading states
 - ✅ Empty states
 
+## Best Practices
+
+**Selectors:**
+```typescript
+// ❌ BRITTLE - CSS classes may change
+await page.click('.submit-btn');
+
+// ✅ ROBUST - Data attributes for testing
+await page.click('[data-testid="submit-button"]');
+
+// ✅ SEMANTIC - ARIA roles
+await page.click('button[role="submit"]');
+```
+
+**Wait for Elements:**
+```typescript
+// ❌ BAD - Fixed delays (flaky)
+await page.click('button');
+await page.waitForTimeout(2000);
+
+// ✅ GOOD - Wait for conditions
+await page.click('button');
+await expect(page.getByText('Success')).toBeVisible();
+```
+
+**Data Isolation:**
+```typescript
+test.describe('User Registration', () => {
+  let testEmail: string;
+
+  test.beforeEach(() => {
+    // Generate unique test data
+    testEmail = `test-${Date.now()}@example.com`;
+  });
+
+  test.afterEach(async ({ request }) => {
+    // Cleanup: Delete test user
+    await request.delete(`/api/users?email=${testEmail}`);
+  });
+});
+```
+
+**Network Mocking:**
+```typescript
+// Mock API responses
+await page.route('/api/users', route => {
+  route.fulfill({
+    status: 200,
+    body: JSON.stringify([{ id: 1, name: 'Test User' }])
+  });
+});
+```
+
 ## Placement
 
 Place in `tests/e2e/` or `e2e/` directory
+
+**File naming:**
+```
+tests/e2e/auth/login.spec.ts
+tests/e2e/checkout/cart-to-payment.spec.ts
+```
