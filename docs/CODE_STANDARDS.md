@@ -101,254 +101,41 @@ enum Environment {
 
 ## React/NextJS
 
-### Components
-```typescript
-// ✅ Props interface above component
-interface ButtonProps {
-  variant: 'primary' | 'secondary';
-  size?: 'sm' | 'md' | 'lg';
-  disabled?: boolean;
-  children: React.ReactNode;
-}
-
-export function Button({ variant, size = 'md', disabled = false, children }: ButtonProps) {
-  return (
-    <button className={`btn btn-${variant} btn-${size}`} disabled={disabled}>
-      {children}
-    </button>
-  );
-}
-```
-
-### Rules
-1. Use functional components (no `React.FC`)
-2. No `React.createElement()` unless initializing app
-3. Use fragments instead of extra divs
-4. Keep components under 120 lines (body only)
-5. Define Props interface for all components
-6. Move side effects out of render methods
-7. Don't edit props within components
-8. Avoid multiple if/else blocks in render
-9. Don't use index as key prop
-10. Move reusable code to common space (if used in 2+ places)
-
-### Server vs Client Components (NextJS)
-```typescript
-// ✅ Server Component (default in App Router)
-export default async function Page() {
-  const data = await fetchData();
-  return <Display data={data} />;
-}
-
-// ✅ Client Component (explicit)
-'use client';
-
-export function Counter() {
-  const [count, setCount] = useState(0);
-  return <button onClick={() => setCount(count + 1)}>{count}</button>;
-}
-```
-
-### Hooks
-```typescript
-// ✅ Custom hooks start with 'use'
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-  
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(handler);
-  }, [value, delay]);
-  
-  return debouncedValue;
-}
-
-// ✅ Complete dependency arrays
-useEffect(() => {
-  fetchData(userId, filter);
-}, [userId, filter]);
-
-// ✅ Cleanup side effects
-useEffect(() => {
-  const subscription = subscribe();
-  return () => subscription.unsubscribe();
-}, []);
-```
-
-### Performance
-```typescript
-// ✅ Memoize expensive computations
-const expensiveValue = useMemo(() => computeExpensiveValue(a, b), [a, b]);
-
-// ✅ Memoize callbacks
-const handleClick = useCallback(() => doSomething(value), [value]);
-
-// ✅ Memoize components (use sparingly)
-export const MemoizedComponent = React.memo(Component);
-```
-
-### Event Handlers
-- Props: prefix with `on` (e.g., `onClick`)
-- Handlers: prefix with `handle` (e.g., `handleClick`)
-
-### Props Naming
-```typescript
-// ❌ BAD - Avoid DOM prop names, use camelCase
-<MyComponent style="fancy" UserName="hello" phone_number={12345678} />
-
-// ✅ GOOD
-<MyComponent variant="fancy" userName="hello" phoneNumber={12345678} />
-```
+**Core principles** (detailed patterns in @frontend agent):
+- Server components default (App Router)
+- `'use client'` for interactivity
+- Props interface above component
+- Components <120 lines (body only)
+- Functional components only (no class components)
 
 ## NestJS/Backend
 
-### Module Organization
-```typescript
-@Module({
-  imports: [TypeOrmModule.forFeature([User])],
-  controllers: [UserController],
-  providers: [UserService, UserRepository],
-  exports: [UserService], // Export if used by other modules
-})
-export class UserModule {}
-```
-
-### Controller Pattern
-```typescript
-@Controller('api/v1/users')
-@UseGuards(JwtAuthGuard)
-export class UserController {
-  constructor(private readonly userService: UserService) {}
-
-  @Get(':id')
-  async findOne(@Param('id') id: string): Promise<UserDto> {
-    return this.userService.findOne(id);
-  }
-
-  @Post()
-  @UsePipes(new ValidationPipe())
-  async create(@Body() dto: CreateUserDto): Promise<UserDto> {
-    return this.userService.create(dto);
-  }
-}
-```
-
-### Service Pattern
-```typescript
-@Injectable()
-export class UserService {
-  constructor(
-    private readonly userRepo: UserRepository,
-    private readonly logger: Logger,
-  ) {}
-
-  async create(dto: CreateUserDto): Promise<User> {
-    // Validation
-    const exists = await this.userRepo.findByEmail(dto.email);
-    if (exists) throw new ConflictException('Email already exists');
-
-    // Business logic
-    const user = await this.userRepo.create(dto);
-
-    this.logger.log(`User created: ${user.id}`);
-    return user;
-  }
-}
-```
-
-### DTO Validation
-```typescript
-export class CreateUserDto {
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
-
-  @IsString()
-  @MinLength(8)
-  @MaxLength(128)
-  @Matches(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]/)
-  password: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  name?: string;
-}
-```
-
-### Error Handling
-```typescript
-// ✅ Use specific exceptions
-throw new NotFoundException('User not found');
-throw new BadRequestException('Invalid input');
-throw new ConflictException('Email exists');
-throw new ForbiddenException('Access denied');
-```
+**Core patterns** (detailed patterns in @backend agent):
+- Controllers: thin, HTTP only
+- Services: business logic
+- DTOs: validate with class-validator
+- Always parameterized queries (never string concatenation)
 
 ## Database
 
-### Migration Naming
-```
-YYYYMMDDHHMMSS_descriptive_name.ts
-20240115120000_create_users_table.ts
-```
-
-### Query Optimization
-```typescript
-// ❌ N+1 Query Problem
-const users = await userRepo.find();
-for (const user of users) {
-  user.posts = await postRepo.findByUserId(user.id);
-}
-
-// ✅ Eager Loading
-const users = await userRepo.find({ relations: ['posts'] });
-```
-
-### Index Strategy
-- Index all foreign keys
-- Composite indexes for common queries
-- Partial indexes for filtered queries
+**Core principles** (detailed patterns in @database agent):
+- Normalized schemas (3NF)
+- Parameterized queries only
+- Index foreign keys and query columns
+- Migrations for all schema changes
 
 ## Project Structure
 
-### Folder Organization
-```
-src/
-├── modules/              # Feature modules
-│   ├── user/
-│   │   ├── components/   # Child components (keep simple ones here)
-│   │   ├── hooks/        # useMySomething.ts
-│   │   ├── utils/        # Utility functions
-│   │   ├── User.tsx      # Main component
-│   │   ├── User.types.ts # Types/interfaces (if >2)
-│   │   ├── User.constants.ts # Constants (if >2)
-│   │   └── __tests__/
-├── common/               # Shared across modules
-│   ├── hooks/
-│   ├── utils/
-│   ├── constants/
-│   └── types/
-```
-
-### Rules
-1. Feature components in separate PascalCase folder
-2. Child components in `components/` subfolder (no nested folders if <100 lines)
-3. Utils in `utils/` folder
-4. Constants (>2) in `ComponentName.constants.ts`
-5. Types (>2) in `ComponentName.types.ts`
-6. Custom hooks in `hooks/` subfolder as `useSomething.ts`
-7. Don't reuse feature-specific code across features (move to common/)
+**Detailed patterns in slash commands** (see `/component`, `/endpoint`, `/hook` for specifics):
+- Feature modules in `src/modules/[feature]/`
+- Shared code in `src/common/`
+- Types (>2) in `ComponentName.types.ts`
+- Custom hooks in `hooks/` subfolder
 
 ## Imports/Exports
 
+**Named exports only** (detailed patterns in slash commands):
 ```typescript
-// ✅ Destructuring imports
-import { Component } from './Component';
-
-// ✅ Type imports
-import type { User } from './types';
-
 // ❌ NO default exports
 export default MyComponent; // BAD
 
@@ -356,85 +143,21 @@ export default MyComponent; // BAD
 export const MyComponent = ...; // GOOD
 ```
 
-### Component Naming
-```typescript
-// ✅ Use directory name as component name
-import { Footer } from './Footer';           // GOOD
-import { Footer } from './Footer/index';     // BAD
-import { Footer } from './Footer/Footer';    // BAD
-```
-
-### Import Order
-```typescript
-// 1. External dependencies
-import { Injectable } from '@nestjs/common';
-
-// 2. Internal (absolute paths from tsconfig)
-import { UserRepository } from '@/repositories/user.repository';
-
-// 3. Relative
-import { CreateUserDto } from './dto/create-user.dto';
-```
+**Import Order:**
+1. External dependencies
+2. Internal (absolute paths from tsconfig)
+3. Relative
 
 **If import path has too many layers, update paths in `tsconfig.json`**
 
 ## Testing
 
-### Tools
-- **Storybook**: Component testing (design-focused)
-- **Jest/Vitest + Testing Library**: Unit/integration tests
-- **Playwright + Testing Library**: E2E tests
-- **MSW**: Mock APIs (REST/GraphQL)
-
-### F.I.R.S.T Principles
-- **F**ast: Quick execution
-- **I**ndependent: Tests don't depend on each other
-- **R**epeatable: Same results every time
-- **S**elf-validating: Pass/fail, no manual checking
-- **T**imely: Written before or with code
-
-### Structure
-```typescript
-describe('UserService', () => {
-  let service: UserService;
-  let mockRepo: jest.Mocked<UserRepository>;
-
-  beforeEach(() => {
-    mockRepo = { findById: jest.fn(), create: jest.fn() } as any;
-    service = new UserService(mockRepo, mockLogger);
-  });
-
-  afterEach(() => jest.clearAllMocks());
-
-  describe('create', () => {
-    it('should create user with valid data', async () => {
-      // Arrange
-      const dto = { email: 'test@example.com', password: 'pass123' };
-      mockRepo.create.mockResolvedValue({ id: '1', ...dto });
-
-      // Act
-      const result = await service.create(dto);
-
-      // Assert
-      expect(result).toEqual({ id: '1', ...dto });
-      expect(mockRepo.create).toHaveBeenCalledWith(dto);
-    });
-  });
-});
-```
-
-### Rules
-1. Unit tests in separate `__tests__/` folder
-2. File naming: `myFunction.test.ts` for `myFunction.ts`
-3. Mock with `jest.spyOn()` method
-4. Write lightweight tests (fast, maintainable, isolated)
-5. Descriptive test names: "should return user when id exists"
-
-### Coverage Guidelines
-- Critical business logic: 90%+
-- Services: 80%+
-- Controllers: 70%+
-- Focus on edge cases and error paths
+**Core principles** (detailed patterns in @test agent):
+- Jest/Vitest (unit), Playwright (e2e), Storybook (components)
+- F.I.R.S.T: Fast, Independent, Repeatable, Self-validating, Timely
+- Arrange-Act-Assert pattern
+- Coverage: 80%+ critical paths
+- Test behavior, not implementation
 
 ## Git Workflow
 
@@ -513,22 +236,13 @@ chore: upgrade dependencies
 
 ## Accessibility
 
-### Basic Rules
-1. Use appropriate DOM elements (`<a>` for links, `<button>` for buttons)
-2. Maintain logical tab-order, use `tabindex` if needed
-3. Add `<label>` to all form fields with unique IDs
-4. Wrap form controls in `<form>` tags
-5. Use `<h1>`-`<h4>` in logical hierarchy
-6. Add unique IDs to headings for direct linking
-7. All `<img>` tags need meaningful `alt` attribute
-8. All `<a>` tags need meaningful text or `title` attribute
-9. Buttons opening popups need `aria-haspopup` attribute
-10. Popups should gain focus on open
-11. Auto-updating content needs manual update method
-12. All focusable elements need distinguishable `:focus` style
-13. Don't use `div`/`span` if appropriate semantic tag exists
-
-**Reference:** [Web Content Accessibility Guidelines (WCAG)](https://www.w3.org/WAI/WCAG21/quickref/)
+**Core principles** (detailed rules in @frontend agent):
+- Use semantic HTML elements
+- Keyboard navigation support
+- ARIA attributes where needed
+- All images need `alt` text
+- Focus styles required
+- **Reference:** [WCAG 2.1](https://www.w3.org/WAI/WCAG21/quickref/)
 
 ## Code Review Checklist
 

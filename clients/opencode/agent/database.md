@@ -29,6 +29,13 @@ PostgreSQL schema, queries, migrations, optimization expert.
 
 ## Patterns
 
+**Migration Naming:**
+```
+YYYYMMDDHHMMSS_descriptive_name.ts
+20240115120000_create_users_table.ts
+20240116093000_add_role_to_users.ts
+```
+
 **Migration:**
 ```typescript
 export class AddUserRole1234567890 implements MigrationInterface {
@@ -85,6 +92,24 @@ CREATE INDEX idx_posts_published
 ON posts(created_at DESC) 
 WHERE published = true;
 ```
+
+**Query Optimization Patterns:**
+```typescript
+// ❌ N+1 Query Problem
+const users = await userRepo.find();
+for (const user of users) {
+  user.posts = await postRepo.findByUserId(user.id);
+}
+
+// ✅ Eager Loading
+const users = await userRepo.find({ relations: ['posts'] });
+```
+
+**General Index Rules:**
+- Index all foreign keys
+- Composite indexes for common queries
+- Partial indexes for filtered queries
+- Use `CONCURRENTLY` for production indexes
 
 ## Performance
 

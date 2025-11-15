@@ -69,26 +69,89 @@ SELECT * FROM users WHERE email = 'test@example.com';
 ### Recommendations
 
 #### Quick Wins (Easy + High Impact)
-1. Recommendation with expected improvement
-   ```typescript
-   // Before (slow)
-   const users = await Promise.all(
-     ids.map(id => db.users.findById(id))
-   ); // N queries
 
-   // After (fast)
-   const users = await db.users.findByIds(ids); // 1 query
+**Database N+1 Queries:**
+```typescript
+// ❌ SLOW - N+1 queries
+const users = await userRepo.find();
+for (const user of users) {
+  user.posts = await postRepo.findByUserId(user.id); // N queries!
+}
 
-   // Expected: 90% faster for 10+ users
-   ```
+// ✅ FAST - Eager loading
+const users = await userRepo.find({ relations: ['posts'] }); // 1 query
+
+// Expected: 90% faster for 10+ users
+```
+
+**React Re-renders:**
+```typescript
+// ❌ SLOW - Creates new object every render
+<Component style={{ margin: 10 }} />
+
+// ✅ FAST - Stable reference
+const styles = { margin: 10 };
+<Component style={styles} />
+
+// ❌ SLOW - Re-creates function every render
+<button onClick={() => handleClick(id)}>Click</button>
+
+// ✅ FAST - Memoized callback
+const handleClick = useCallback(() => doSomething(id), [id]);
+<button onClick={handleClick}>Click</button>
+```
+
+**Missing Database Indexes:**
+```sql
+-- ❌ SLOW - Full table scan
+SELECT * FROM users WHERE email = 'test@example.com'; -- 2000ms
+
+-- ✅ FAST - Index scan
+CREATE INDEX idx_users_email ON users(email);
+SELECT * FROM users WHERE email = 'test@example.com'; -- 5ms
+
+-- Expected: 99% faster for 100k+ rows
+```
+
+**Bundle Size:**
+```typescript
+// ❌ LARGE BUNDLE - Import entire library
+import _ from 'lodash'; // 70KB
+
+// ✅ SMALL BUNDLE - Import specific functions
+import { debounce } from 'lodash-es'; // 2KB
+
+// ✅ Code splitting - Lazy load heavy components
+const Dashboard = lazy(() => import('./Dashboard'));
+```
 
 #### Medium Effort
-1. Implementation approach
-2. Expected improvement
+
+**Caching:**
+```typescript
+// Add Redis cache for frequent queries
+async getUser(id: string) {
+  const cached = await redis.get(`user:${id}`);
+  if (cached) return JSON.parse(cached);
+  
+  const user = await db.users.findById(id);
+  await redis.set(`user:${id}`, JSON.stringify(user), 'EX', 300); // 5min TTL
+  return user;
+}
+```
+
+**Query Optimization:**
+```sql
+-- Add composite index for common queries
+CREATE INDEX idx_posts_user_published 
+ON posts(user_id, published, created_at DESC);
+```
 
 #### Long-term
-1. Architectural changes
-2. Infrastructure upgrades
+1. Implement CDN for static assets
+2. Database read replicas
+3. Horizontal scaling (load balancer)
+4. Microservices for independent scaling
 
 ### Monitoring
 - Metrics to track

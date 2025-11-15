@@ -29,6 +29,17 @@ NestJS, Node.js, REST APIs, GraphQL expert.
 
 ## Patterns
 
+**Module Organization:**
+```typescript
+@Module({
+  imports: [TypeOrmModule.forFeature([User])],
+  controllers: [UserController],
+  providers: [UserService, UserRepository],
+  exports: [UserService], // Export if used by other modules
+})
+export class UserModule {}
+```
+
 **Controller:**
 ```typescript
 @Controller('api/v1/users')
@@ -69,7 +80,7 @@ export class UserService {
 }
 ```
 
-**DTO:**
+**DTO Validation:**
 ```typescript
 export class CreateUserDto {
   @IsEmail()
@@ -79,8 +90,67 @@ export class CreateUserDto {
   @IsString()
   @MinLength(8)
   @MaxLength(128)
+  @Matches(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]/)
   password: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  name?: string;
 }
+```
+
+**Error Handling:**
+```typescript
+// ✅ Use specific exceptions
+throw new NotFoundException('User not found');
+throw new BadRequestException('Invalid input');
+throw new ConflictException('Email exists');
+throw new ForbiddenException('Access denied');
+```
+
+## Security Headers
+
+**Helmet Configuration:**
+```typescript
+import helmet from 'helmet';
+
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
+}));
+```
+
+**Rate Limiting:**
+```typescript
+@UseGuards(ThrottlerGuard)
+@Throttle(10, 60) // 10 requests per 60 seconds
+@Post('login')
+async login() { ... }
+```
+
+**CORS Configuration:**
+```typescript
+// ❌ ALLOW ALL
+app.enableCors({ origin: '*' });
+
+// ✅ SPECIFIC ORIGINS
+app.enableCors({
+  origin: ['https://yourdomain.com'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+});
 ```
 
 ## Before Changes
