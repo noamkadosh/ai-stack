@@ -178,9 +178,16 @@ ai/
 ├── clients/
 │   └── opencode/              # → stow to ~/.config/opencode/
 │       ├── opencode.json      # MCP gateway configuration
-│       ├── agent/             # 10 specialized agent definitions
+│       ├── agent/             # Agent definitions
+│       │   ├── review.md      # Primary agent: code review mode (with frontmatter)
+│       │   ├── debug.md       # Primary agent: debugging mode (with frontmatter)
+│       │   ├── research.md    # Primary agent: research mode (with frontmatter)
+│       │   └── [10 more]      # Specialized domain agents (architect, frontend, backend, etc.)
 │       ├── command/           # 8 custom slash commands
-│       └── docs/              # Code standards, security guidelines
+│       └── docs/              # OpenCode-specific documentation
+│           ├── PRIMARY_AGENT_MODES.md  # Guide to 5 primary modes (plan, build, review, debug, research)
+│           ├── QUICK_REFERENCE.md      # Quick reference for agents
+│           └── SHARED_MEMORY.md        # MCP Memory server usage guide
 │
 ├── mcp/
 │   ├── docker/
@@ -188,13 +195,18 @@ ai/
 │   └── servers/
 │       └── code-index-mcp/         # Submodule - local build
 │
-├── docs/
+├── docs/                      # General documentation (applies to all projects)
 │   ├── MCP_SERVERS.md         # Server reference documentation
-│   ├── code-standards.md      # TypeScript/React/NestJS standards
-│   └── security-guidelines.md # Security best practices
+│   ├── CODE_STRANDARDS.md     # TypeScript/React/NestJS standards
+│   ├── SECURITY_GUIDLENIES.md # Security best practices
+│   └── RESEARCH_TASK_VS_DOMAIN_AGENTS.md  # Agent architecture research
 │
 └── README.md                  # This file
 ```
+
+**Directory Distinction**:
+- `clients/opencode/docs/` - OpenCode-specific guides (agent modes, MCP usage)
+- `docs/` - General coding standards and best practices (language-agnostic)
 
 ## Available MCP Servers
 

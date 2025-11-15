@@ -4,6 +4,11 @@ mode: subagent
 model: anthropic/claude-sonnet-4-5
 temperature: 0.2
 topP: 0.95
+tools:
+  write: true
+  edit: true
+  bash: true
+  read: true
 ---
 
 # Frontend Specialist

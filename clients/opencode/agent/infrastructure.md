@@ -9,6 +9,8 @@ tools:
   edit: true
   bash: true
   read: true
+permission:
+  bash: ask
 ---
 
 # Infrastructure Specialist

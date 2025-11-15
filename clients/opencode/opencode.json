@@ -7,6 +7,7 @@
   "instructions": [
     "AGENTS.md",
     "./docs/*.md",
+    "~/Developer/dotfiles/ai/docs/*.md",
     "packages/*/AGENTS.md",
     ".cursor/rules/*.md",
     "CONTRIBUTING.md"
@@ -54,10 +55,31 @@
       "tools": {
         "write": true,
         "edit": true,
-        "bash": true
+        "bash": true,
+        "webfetch": true
       },
       "permission": {
-        "bash": { "git push*": "ask", "rm -rf*": "deny", "npm publish*": "ask" }
+        "edit": "allow",
+        "webfetch": "allow",
+        "bash": {
+          "git status": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git add*": "allow",
+          "git commit*": "allow",
+          "npm test*": "allow",
+          "npm run*": "allow",
+          "npm install": "allow",
+          "npm ci": "allow",
+          "rm -rf*": "deny",
+          "rm -fr*": "deny",
+          "git push*": "ask",
+          "git push --force*": "deny",
+          "npm publish*": "ask",
+          "yarn publish*": "ask",
+          "docker*": "allow",
+          "*": "ask"
+        }
       }
     },
     "plan": {
@@ -69,7 +91,24 @@
       "tools": {
         "write": false,
         "edit": false,
-        "bash": false
+        "bash": true,
+        "webfetch": true
+      },
+      "permission": {
+        "webfetch": "allow",
+        "bash": {
+          "git status": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "npm test*": "allow",
+          "npm run test*": "allow",
+          "rm -rf*": "deny",
+          "git push*": "deny",
+          "git commit*": "deny",
+          "git add*": "deny",
+          "npm install": "deny",
+          "*": "ask"
+        }
       }
     }
   },

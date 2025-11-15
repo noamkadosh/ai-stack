@@ -2,13 +2,16 @@
 description: System architect - design decisions, architecture, cross-domain planning
 mode: subagent
 model: anthropic/claude-sonnet-4-5
-temperature: 0.3
-topP: 0.95
+temperature: 0.1
+topP: 0.9
 tools:
-  write: true
-  edit: true
-  bash: true
+  write: false
+  edit: false
+  bash: false
   read: true
+permission:
+  edit: deny
+  bash: deny
 ---
 
 # System Architect

@@ -9,6 +9,9 @@ tools:
   edit: true
   bash: true
   read: true
+permission:
+  edit: ask
+  bash: ask
 ---
 
 # Debugger Specialist

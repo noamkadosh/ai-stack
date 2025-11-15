@@ -70,12 +70,14 @@ All development tasks follow this standardized workflow from planning through me
 |-------|-------|----------------|-----------------|
 | **1. PLAN** | OpenCode built-in | Analyze task, review codebase, plan approach, identify risks | @architect, @database, @security, @test |
 | **2. BUILD** | OpenCode built-in | Implement changes, write tests, follow standards | @frontend, @backend, @database, @test |
-| **3. VALIDATE** | BUILD agent | Run tests, linting, type-checking, security audit | @security (for comprehensive audit) |
-| **4. DOCUMENT** | BUILD agent | Update API docs, README, ADRs, code comments (skip for minor fixes) | @documentation |
-| **5. COMMIT** | Main agent (you) | Commit with conventional format (`feat:`, `fix:`, etc.), push to remote | - |
-| **6. OPEN PR** | Main agent (you) | Create PR with `gh pr create`, describe changes, testing steps | - |
-| **7. REVIEW LOOP** | Main agent (you) | User reviews → agent updates → repeat until approved | Domain specialists as needed |
-| **8. MERGE** | User or you | **Squash merge** to main, delete branch, verify CI/CD | - |
+| **3. VALIDATE** | BUILD agent | Run tests, linting, type-checking | - |
+| **4. REVIEW** | @reviewer | **Evaluator-optimizer**: Code quality check, identify improvements | - |
+| **5. ITERATE** | BUILD agent | Address review feedback (if needed), max 2 cycles | Domain specialists |
+| **6. DOCUMENT** | @documentation | Update API docs, README, ADRs, code comments (skip for minor fixes) | - |
+| **7. COMMIT** | Main agent (you) | Commit with conventional format (`feat:`, `fix:`, etc.), push to remote | - |
+| **8. OPEN PR** | Main agent (you) | Create PR with `gh pr create`, describe changes, testing steps | - |
+| **9. REVIEW LOOP** | Main agent (you) | User reviews → agent updates → repeat until approved | Domain specialists as needed |
+| **10. MERGE** | User or you | **Squash merge** to main, delete branch, verify CI/CD | - |
 
 **Workflow Diagram**:
 
@@ -95,38 +97,99 @@ All development tasks follow this standardized workflow from planning through me
 ┌─────────────────────────────────────────────────────────────┐
 │  3. VALIDATE                                                │
 │     • Run tests, linting, type-checking                     │
-│     • Security audit                                        │
 └────────────────────────┬────────────────────────────────────┘
                          ↓
 ┌─────────────────────────────────────────────────────────────┐
-│  4. DOCUMENT                                                │
+│  4. REVIEW (@reviewer - Evaluator-Optimizer Pattern)       │
+│     • Code quality check                                    │
+│     • Security scan                                         │
+│     • Performance review                                    │
+│     • Best practices verification                           │
+└────────────────────────┬────────────────────────────────────┘
+                         ↓
+                 ┌───────┴────────┐
+                 ↓                ↓
+         Issues Found?        Approved?
+                 ↓                ↓
+┌────────────────┴────────────────────────────────────────────┐
+│  5. ITERATE (if issues found, max 2 cycles)                │
+│     • Address feedback                                      │
+│     • Re-run VALIDATE                                       │
+│     • Re-run REVIEW                                         │
+└────────────────────────┬────────────────────────────────────┘
+                         ↓ (if approved or max cycles)
+┌─────────────────────────────────────────────────────────────┐
+│  6. DOCUMENT                                                │
 │     • Update docs, ADRs, comments                           │
 └────────────────────────┬────────────────────────────────────┘
                          ↓
 ┌─────────────────────────────────────────────────────────────┐
-│  5. COMMIT                                                  │
+│  7. COMMIT                                                  │
 │     • Commit with conventional format                       │
 │     • Push to remote                                        │
 └────────────────────────┬────────────────────────────────────┘
                          ↓
 ┌─────────────────────────────────────────────────────────────┐
-│  6. OPEN PR                                                 │
+│  8. OPEN PR                                                 │
 │     • Create PR with gh CLI                                 │
 │     • Describe changes, testing steps                       │
 └────────────────────────┬────────────────────────────────────┘
                          ↓
 ┌─────────────────────────────────────────────────────────────┐
-│  7. REVIEW LOOP ←──────────────┐                            │
+│  9. REVIEW LOOP ←──────────────┐                            │
 │     • User reviews              │                            │
 │     • Agent updates             │                            │
 │     • Repeat until approved ────┘                            │
 └────────────────────────┬────────────────────────────────────┘
                          ↓
 ┌─────────────────────────────────────────────────────────────┐
-│  8. MERGE                                                   │
+│  10. MERGE                                                  │
 │     • Squash merge to main                                  │
 │     • Delete branch                                         │
 └─────────────────────────────────────────────────────────────┘
+```
+
+### Evaluator-Optimizer Workflow (Step 4-5)
+
+After implementing changes in BUILD mode, invoke @reviewer for quality gates:
+
+**Review invocation:**
+```
+@reviewer review the changes in [files] for:
+- Code quality and best practices
+- Security vulnerabilities  
+- Performance implications
+- Test coverage adequacy
+```
+
+**Decision point:**
+- ✅ **If @reviewer approves** → Proceed to DOCUMENT
+- ❌ **If @reviewer flags issues** → ITERATE
+  - Address critical/high priority issues
+  - Re-run VALIDATE (tests must still pass)
+  - Re-run REVIEW (verify fixes)
+
+**Maximum iterations**: 2 review cycles
+- After 2 cycles, present to user for decision
+- Prevents infinite loops
+
+**Example flow:**
+```
+User: "Add user login feature"
+    ↓
+BUILD: Implements @backend API + @frontend UI + @database schema
+    ↓
+VALIDATE: All tests pass ✅
+    ↓
+REVIEW (@reviewer): [HIGH] Missing rate limiting on login endpoint
+    ↓
+ITERATE: Adds rate limiting, updates tests
+    ↓
+VALIDATE: Tests pass ✅
+    ↓
+REVIEW (@reviewer): Approved ✅
+    ↓
+DOCUMENT: Updates API docs
 ```
 
 ---
@@ -163,9 +226,193 @@ Consider these factors before delegating:
 
 ---
 
+## Agent Coordination Patterns
+
+How to coordinate multiple agents for complex tasks.
+
+### Pattern 1: Sequential (Dependencies)
+
+**When to use**: Tasks must happen in order, output of one informs next
+
+**Example:**
+```
+User: "Implement multi-tenant database architecture"
+
+Sequential delegation:
+1. @architect → Design multi-tenant schema
+2. @database → Create schema (depends on #1 architecture)
+3. @backend → Implement tenant isolation (depends on #2 schema)
+4. @test → Create tests (depends on #1-3 implementation)
+5. @security → Audit tenant isolation (depends on #1-4 completion)
+6. @reviewer → Final code review
+```
+
+**Benefits**: Clear dependencies, each step informs next  
+**Drawbacks**: Slower (sequential), blocks on each step
+
+---
+
+### Pattern 2: Parallel (Independent)
+
+**When to use**: Tasks are independent, no dependencies, speed matters
+
+**Example:**
+```
+User: "Build product listing page with filters"
+
+Parallel delegation (simultaneous):
+- @frontend → UI components (ProductList, FilterBar, ProductCard)
+- @backend → API endpoints (GET /api/v1/products with query params)
+- @database → Schema + indexes (products table, indexes on category, price)
+- @test → E2E test plan (test filtering, sorting, pagination)
+
+Then: Main agent integrates results
+```
+
+**Benefits**: Fast (parallel execution), maximizes throughput  
+**Drawbacks**: Integration complexity, potential conflicts
+
+---
+
+### Pattern 3: Iterative (Refinement)
+
+**When to use**: Measurable success criteria, iterative improvement possible
+
+**Example:**
+```
+User: "Optimize dashboard performance to load in <1 second"
+
+Iteration loop (max 3 cycles):
+1. @performance → Analyze bottlenecks (measure current: 5s)
+2. @backend/@frontend → Implement top 3 fixes (parallel)
+3. @performance → Re-measure (current: 2.5s)
+4. Repeat until target (<1s) or max iterations
+
+Iteration 1: 5s → 2.5s (caching, code splitting)
+Iteration 2: 2.5s → 1.2s (lazy loading, query optimization)
+Iteration 3: 1.2s → 0.8s (memoization, indexes) ✅ Target met
+```
+
+**Benefits**: Continuous improvement, measurable progress  
+**Drawbacks**: Time-consuming, may not reach target
+
+---
+
+### Pattern 4: Cascade (Escalation)
+
+**When to use**: Agent encounters decision beyond its domain expertise
+
+**Example:**
+```
+@backend working on API endpoint:
+"This pagination approach affects frontend, database, and caching strategy"
+    ↓ escalate (decision beyond backend domain)
+    
+@architect makes architectural decision:
+"Use cursor-based pagination with Redis caching"
+    ↓ delegate back with decision
+    
+@backend implements per architecture
+@database creates indexes per architecture
+@frontend consumes API per architecture
+```
+
+**Benefits**: Expertise applied appropriately, consistent decisions  
+**Drawbacks**: Coordination overhead, potential delays
+
+---
+
+### Choosing the Right Pattern
+
+| Scenario | Pattern | Why |
+|----------|---------|-----|
+| New feature spanning domains | **Parallel** | Independent work, faster delivery |
+| Database migration | **Sequential** | Schema → Backend → Frontend dependencies |
+| Performance optimization | **Iterative** | Measure → Improve → Re-measure loop |
+| API design disagreement | **Cascade** | Escalate to @architect for decision |
+| Bug fix in one domain | **None** | Handle directly, no coordination needed |
+
+---
+
 ## Specialized Agents
 
-This project has 10 specialized agents. Each is an expert in their domain.
+This project has **12 specialized subagents**. Each is an expert in their domain.
+
+> **Note**: These are OpenCode "subagents" - they are invoked by primary agents (or manually with @ mention) for focused tasks. They work autonomously and create child sessions. They are **not** meant to be full conversation partners, but specialized tools for specific tasks.
+
+---
+
+## Agent Categories
+
+Agents are organized into two categories based on their applicability:
+
+### Universal Agents (Cross-Domain)
+
+These agents work across ALL domains and tech stacks:
+
+| Agent | Purpose | When to Use |
+|-------|---------|-------------|
+| **@reviewer** | Code quality across all languages | After any implementation |
+| **@security** | Security audit across all domains | Before deployment, after auth/permission changes |
+| **@debugger** | Troubleshoot any issue | When bugs occur in any domain |
+| **@performance** | Optimize any bottleneck | When performance issues detected anywhere |
+| **@refactoring** | Improve any code quality | When technical debt accumulates |
+| **@documentation** | Write docs for anything | After features, for APIs, ADRs |
+
+**Characteristics**:
+- No domain-specific knowledge required
+- Apply general principles (SOLID, security, performance)
+- Can be invoked for frontend, backend, database, or infrastructure code
+
+---
+
+### Conditional Agents (Domain-Specific)
+
+These agents only work in specific technology domains:
+
+| Agent | Domain | Tech Stack | When NOT to Use |
+|-------|--------|------------|-----------------|
+| **@architect** | Multi-domain planning | All (coordination) | Simple single-domain tasks |
+| **@backend** | Server-side code | NestJS, Node.js, REST, GraphQL | Frontend or database work |
+| **@frontend** | Client-side code | React, NextJS, TypeScript | Backend or database work |
+| **@database** | Data layer | PostgreSQL | Application logic |
+| **@test** | Testing code | Jest, Vitest, Playwright | Production code |
+| **@infrastructure** | DevOps/deployment | Docker, AWS, Nix, CI/CD | Application code |
+
+**Characteristics**:
+- Deep domain expertise
+- Domain-specific tools and patterns
+- May not apply to other tech stacks
+
+---
+
+### Decision Tree: Which Agent to Use?
+
+```
+Is this a code quality/security/performance/debugging issue?
+    ↓ YES
+    → Use Universal Agent (@reviewer, @security, @performance, @debugger)
+    
+    ↓ NO
+    
+Does this require domain-specific technical knowledge?
+    ↓ YES
+    → Use Conditional Agent (@backend, @frontend, @database, etc.)
+    
+    ↓ NO
+    
+Is it an architectural decision affecting multiple domains?
+    ↓ YES
+    → Escalate to @architect
+    
+    ↓ NO
+    
+Simple enough to handle yourself?
+    ↓ YES
+    → Implement directly (no delegation needed)
+```
+
+---
 
 ### @architect - System Architect
 
@@ -448,6 +695,64 @@ This project has 10 specialized agents. Each is an expert in their domain.
 
 ---
 
+### @performance - Performance Optimizer
+
+**Expertise**: Performance analysis, bottleneck identification, optimization strategies.
+
+**Use for:**
+- Identify performance bottlenecks (CPU, memory, network, database)
+- Profile application performance
+- Bundle size analysis and optimization
+- Database query performance analysis
+- React rendering optimization
+- Caching strategy recommendations
+
+**Example invocations:**
+```
+@performance analyze why the dashboard page takes 5 seconds to load
+
+@performance identify N+1 queries in the user listing endpoint
+
+@performance review bundle size - it's 450KB and should be <200KB
+```
+
+**Escalation:**
+- Architectural performance issues → @architect
+- Infrastructure scaling → @infrastructure
+- Database schema redesign → @database
+- Algorithm optimization → Domain specialist
+
+---
+
+### @refactoring - Refactoring Specialist
+
+**Expertise**: Code quality improvements, design pattern application, technical debt reduction.
+
+**Use for:**
+- Apply SOLID principles and design patterns
+- Extract reusable code (DRY principle)
+- Simplify complex functions (KISS)
+- Remove code duplication
+- Improve naming and readability
+- Modernize legacy code
+
+**Example invocations:**
+```
+@refactoring improve UserService - it's 350 lines and has 4 responsibilities
+
+@refactoring extract duplicate validation logic across controllers
+
+@refactoring apply Strategy pattern to payment processing code
+```
+
+**Escalation:**
+- Architectural refactoring → @architect
+- Performance optimization → @performance
+- Database schema changes → @database
+- Security improvements → @security
+
+---
+
 ## Delegation Best Practices
 
 ### 1. Be Specific
@@ -593,11 +898,13 @@ You (Main Agent)
 Escalate decisions upward when specialist's expertise is exceeded.
 
 ```
-Level 1: Domain Specialists
-@frontend, @backend, @database, @test, @infrastructure
+Level 1: Domain Specialists (Implementation)
+@frontend, @backend, @database, @test, @infrastructure, @documentation
     ↓
-Level 2: Cross-Cutting Specialists
+Level 2: Cross-Cutting Specialists (Analysis & Improvement)
 @reviewer (for code quality)
+@refactoring (for code improvement)
+@performance (for optimization)
 @security (for security issues)
 @debugger (for bugs/performance)
 @documentation (for docs)
@@ -729,6 +1036,448 @@ Code improvement without changing behavior:
 
 ---
 
+## Safety Guardrails
+
+Critical safeguards to prevent destructive operations.
+
+### High-Risk Operations (Always Ask User)
+
+These operations MUST get explicit user confirmation:
+
+#### 1. Data Loss Risk
+- Database schema drops (`DROP TABLE`, `DROP COLUMN`)
+- File deletions (`rm`, `delete`, especially `rm -rf`)
+- Git force push (`git push --force`)
+- Production deployments
+- Irreversible migrations
+
+#### 2. Security Risk
+- Authentication system changes
+- Permission/role modifications
+- API key rotation
+- CORS configuration changes
+- Security header modifications
+
+#### 3. Breaking Changes
+- Public API modifications (versioned endpoints)
+- Database migrations affecting production
+- Dependency major version upgrades
+- Contract changes (API, GraphQL schema)
+
+---
+
+### Checkpoint Pattern
+
+When agent detects high-risk operation:
+
+```
+Agent detects HIGH-RISK operation
+    ↓
+PAUSE execution
+    ↓
+Show user:
+- What operation is planned
+- Why it's high-risk
+- What could go wrong
+- Recommended mitigation
+    ↓
+Wait for EXPLICIT user approval
+    ↓
+If APPROVED → Execute with extra caution (backups, rollback plan)
+If REJECTED → Suggest safer alternative
+```
+
+---
+
+### Example: Database Migration Checkpoint
+
+```
+@database: "About to drop 'legacy_users' table for migration"
+    ↓ CHECKPOINT
+    
+⚠️  HIGH-RISK OPERATION DETECTED
+
+Operation: DROP TABLE legacy_users
+Risk Level: 🔴 CRITICAL
+Impact: Data loss for 10,000+ user records
+Reason: Migration consolidates users into new table
+
+Mitigation checklist:
+[ ] Backup database
+[ ] Verify data copied to new table
+[ ] Create rollback migration
+[ ] Test on staging first
+[ ] Schedule maintenance window
+
+Proceed? [yes/NO] _
+```
+
+---
+
+### Safety By Default
+
+Agents should:
+- ✅ Assume production environment unless stated otherwise
+- ✅ Create backups before destructive operations
+- ✅ Write reversible migrations (up + down)
+- ✅ Use soft deletes instead of hard deletes
+- ✅ Ask before executing bash commands with `rm`, `drop`, `force`
+- ✅ Validate data integrity before/after changes
+
+---
+
+## Error Handling & Recovery
+
+How to handle agent failures and conflicts.
+
+### Common Failure Modes
+
+#### 1. Agent Can't Complete Task
+
+**Symptoms**: Agent returns "I cannot complete this task" or gets stuck
+
+**Recovery steps:**
+```
+Step 1: Verify agent is correct for domain
+Problem: @frontend invoked for database schema?
+Fix: Use @database instead
+
+Step 2: Break down task further
+Problem: Task too complex for single agent?
+Fix: Manual decomposition into smaller subtasks
+
+Step 3: Provide more context
+Problem: Missing requirements or unclear specs?
+Fix: Add detailed specifications, examples, constraints
+
+Step 4: Escalate if needed
+Problem: @backend stuck on architectural decision?
+Fix: Escalate to @architect for guidance
+```
+
+---
+
+#### 2. Agent Produces Incorrect Output
+
+**Symptoms**: Code doesn't work, tests fail, wrong approach taken
+
+**Recovery steps:**
+```
+Step 1: Invoke @reviewer to diagnose
+@reviewer review [agent output] for correctness and identify specific issues
+
+Step 2: Provide SPECIFIC feedback (not generic)
+❌ BAD: "This is wrong, fix it"
+✅ GOOD: "The authentication should use JWT (not sessions).
+          Refer to existing implementation in src/auth/jwt.strategy.ts
+          for the correct pattern."
+
+Step 3: Re-invoke with corrections
+@backend fix authentication to use JWT following the pattern in 
+src/auth/jwt.strategy.ts
+
+Step 4: Hard stop after 2 failed attempts
+After 2 attempts → Present to user for decision or implement yourself
+```
+
+---
+
+#### 3. Agents Conflict (Disagreement)
+
+**Symptoms**: @frontend and @backend disagree on API contract, data format, etc.
+
+**Recovery:**
+```
+Escalate to @architect for authoritative decision:
+
+@architect resolve API contract disagreement:
+
+Context:
+- @frontend expects: GET /api/users → User[]
+- @backend implemented: GET /api/users → { data: User[], meta: {...} }
+
+Which approach should we standardize on project-wide?
+```
+
+**After @architect decides:**
+- Affected agents update their implementations
+- Document decision in ADR (Architecture Decision Record)
+- Update coding standards if pattern applies broadly
+
+---
+
+#### 4. Infinite Loop / Agent Stuck
+
+**Symptoms**: Agent repeatedly tries same failed approach
+
+**Hard stop protocol:**
+```
+Attempt 1: Original approach (agent's first try)
+    ↓ FAILS
+Attempt 2: Agent self-corrects (agent tries different way)
+    ↓ FAILS
+Attempt 3: With explicit guidance from you (specific instructions)
+    ↓ FAILS
+    
+STOP → Human intervention required
+
+Present to user:
+1. What was attempted (all 3 approaches)
+2. Why each failed (error messages, root cause)
+3. Request human guidance or suggest alternative approach
+```
+
+**Prevent infinite loops:**
+- Maximum 3 attempts per agent per task
+- Track attempt count automatically
+- After max attempts, escalate to user
+
+---
+
+#### 5. Integration Conflicts
+
+**Symptoms**: Work from multiple agents doesn't integrate properly
+
+**Recovery:**
+```
+Step 1: Identify conflict
+Example: @frontend built UI expecting sync API,
+         @backend built async API with job queues
+
+Step 2: Determine correct approach
+- Check architectural decisions (@architect)
+- Review project patterns (existing code)
+- Consider user requirements
+
+Step 3: Reconcile
+Option A: Update @frontend to handle async
+Option B: Add sync endpoint in @backend
+Option C: Hybrid (sync for simple, async for complex)
+
+Step 4: Update both agents with decision
+@frontend: Update to handle async responses
+@backend: Add webhook for job completion notification
+```
+
+---
+
+### Error Prevention Best Practices
+
+**Before delegating:**
+- ✅ Clearly define success criteria
+- ✅ Specify constraints and requirements
+- ✅ Provide examples of expected output
+- ✅ Reference existing patterns to follow
+
+**During execution:**
+- ✅ Monitor for early warning signs (agent uncertainty, multiple attempts)
+- ✅ Intervene early if agent shows signs of struggle
+- ✅ Provide course corrections before complete failure
+
+**After failures:**
+- ✅ Document what failed and why
+- ✅ Update agent instructions if pattern repeats
+- ✅ Consider if task should be broken down differently
+
+---
+
+## Quick Start Workflows
+
+Common scenarios with exact agent invocation patterns.
+
+### Workflow 1: New Feature End-to-End
+
+```bash
+# USER: "Build user notification system with email and in-app notifications"
+
+# Step 1: Architecture (if feature is complex)
+@architect design notification system architecture including:
+- Delivery channels (email, in-app, push)
+- Storage (notification preferences, history)
+- Queueing strategy (immediate vs batched)
+
+# Step 2: Parallel implementation
+@database create notifications schema with:
+- notifications table (id, user_id, type, content, read_at, created_at)
+- notification_preferences table (user_id, channel, enabled)
+- indexes on user_id and created_at
+
+@backend create notifications API:
+- POST /api/v1/notifications (create notification)
+- GET /api/v1/notifications (list user's notifications)
+- PATCH /api/v1/notifications/:id/read (mark as read)
+- Background job for email delivery
+
+@frontend create notification components:
+- NotificationBell (shows unread count)
+- NotificationList (dropdown with notifications)
+- NotificationPreferences (user settings)
+
+# Step 3: Testing
+@test create E2E tests for:
+- User receives notification
+- Email is sent
+- Notification is marked as read
+- Preferences are respected
+
+# Step 4: Quality gates (AUTOMATIC via evaluator-optimizer)
+@reviewer reviews all changes
+@security audits notification system
+
+# Step 5: Documentation
+@documentation update:
+- API documentation for notification endpoints
+- User guide for notification preferences
+```
+
+---
+
+### Workflow 2: Bug Fix
+
+```bash
+# USER: "Login fails with 500 error after password reset"
+
+# Step 1: Investigation
+@debugger investigate "Login fails with 500 error after password reset"
+Expected output:
+- Root cause analysis
+- Reproduction steps
+- Affected code locations
+
+# Step 2: Implement fix based on root cause
+# (Suppose @debugger found: "Password hash not updated in database")
+@backend fix password reset to update hash in database:
+- File: src/auth/auth.service.ts
+- Function: resetPassword()
+- Issue: Sends email but doesn't save new hash
+
+# Step 3: Regression test
+@test add regression test for password reset bug:
+- Test: User can login after password reset
+- Verify: New password hash is saved
+- Verify: Old password no longer works
+
+# Step 4: Review
+@reviewer verify bug fix doesn't introduce new issues
+```
+
+---
+
+### Workflow 3: Performance Optimization
+
+```bash
+# USER: "Dashboard takes 5 seconds to load, target is <1 second"
+
+# Step 1: Analysis
+@performance analyze why dashboard takes 5 seconds to load
+Expected output:
+- Bottleneck identification (database, rendering, network)
+- Ranked list of optimization opportunities
+- Expected impact of each
+
+# Step 2: Implement top 3 fixes (parallel)
+@frontend implement code-splitting for dashboard:
+- Lazy load heavy components
+- Use React.lazy() for charts library
+- Expected: 450KB → 150KB bundle
+
+@backend add caching to products endpoint:
+- Redis cache for product listings (5 min TTL)
+- Cache invalidation on product updates
+- Expected: 800ms → 50ms response time
+
+@database add index on products.created_at:
+- CREATE INDEX idx_products_created_at ON products(created_at DESC)
+- Expected: Full table scan → index scan
+
+# Step 3: Measure improvement
+@performance re-measure dashboard load time after optimizations
+Target: <1 second
+
+# Step 4: Iterate if needed
+# If still >1s, @performance suggests next round of fixes
+```
+
+---
+
+### Workflow 4: Security Audit
+
+```bash
+# USER: "Audit authentication system for security vulnerabilities"
+
+# Step 1: Comprehensive audit
+@security audit authentication system for OWASP Top 10:
+- A01: Broken Access Control
+- A02: Cryptographic Failures  
+- A03: Injection
+- A07: Identification and Authentication Failures
+Focus on: JWT implementation, password storage, session management
+
+# Step 2: Review findings and prioritize
+@security provides report with severity levels:
+- CRITICAL: Fix immediately (e.g., hardcoded secret)
+- HIGH: Fix before next release (e.g., weak password policy)
+- MEDIUM: Fix in next sprint (e.g., missing rate limiting)
+- LOW: Technical debt (e.g., deprecated crypto library)
+
+# Step 3: Fix critical/high issues
+@backend fix critical security issues:
+1. Move JWT secret to environment variable
+2. Implement rate limiting on login endpoint
+3. Add account lockout after 5 failed attempts
+
+# Step 4: Re-audit
+@security verify fixes for [specific vulnerabilities]
+
+# Step 5: Documentation
+@documentation document security measures for compliance:
+- How authentication works
+- Security controls in place
+- Compliance with OWASP guidelines
+```
+
+---
+
+### Workflow 5: Code Refactoring
+
+```bash
+# USER: "UserService is 350 lines with 4 responsibilities - refactor it"
+
+# Step 1: Analysis
+@reviewer analyze UserService for code smells and suggest refactoring strategy:
+- Identify distinct responsibilities
+- Suggest class extraction
+- Highlight violation of Single Responsibility Principle
+
+# Step 2: Refactoring strategy (if complex)
+@architect design refactoring approach for UserService:
+- UserService (core user management)
+- UserAuthenticationService (login, logout, password)
+- UserProfileService (profile updates, avatar)
+- UserNotificationService (email, preferences)
+
+# Step 3: Implement refactoring
+@refactoring split UserService into 4 services per @architect design:
+- Extract methods into new services
+- Update dependency injection
+- Maintain backwards compatibility
+- Update tests
+
+# Step 4: Verify no behavior changes
+@test ensure all existing tests still pass:
+- Run full test suite
+- Add integration tests if needed
+- Verify API contracts unchanged
+
+# Step 5: Quality check
+@reviewer verify refactoring improves code quality:
+- Reduced complexity
+- Better separation of concerns
+- Improved testability
+```
+
+---
+
 ## Quick Reference
 
 | Situation | Agent to Use |
@@ -740,8 +1489,9 @@ Code improvement without changing behavior:
 | Technology stack choice | **@architect** |
 | Security concern | **@security** |
 | Bug investigation | **@debugger** |
-| Performance issue | **@debugger** → specialist |
+| Performance bottleneck | **@performance** |
 | Code quality review | **@reviewer** |
+| Code refactoring | **@refactoring** |
 | Documentation needed | **@documentation** |
 | New API endpoint | **@backend** |
 | New UI component | **@frontend** |

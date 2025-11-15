@@ -11,7 +11,8 @@ tools:
   read: true
 permission:
   edit: deny
-  bash: ask
+  bash: deny
+  webfetch: deny
 ---
 
 # Security Auditor
