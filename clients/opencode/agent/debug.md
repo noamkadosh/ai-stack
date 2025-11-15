@@ -13,9 +13,18 @@ permission:
   bash:
     "git diff*": allow
     "git status": allow
+    "git log*": allow
     "npm test*": allow
-    "npm run*": allow
+    "npm run test*": allow
+    "sed*": deny
+    "awk*": deny
+    "export*": deny
+    "alias*": deny
+    "unalias*": deny
     "rm -rf*": deny
+    "npm run*": deny
+    "docker*": deny
+    "npm publish*": deny
     "*": ask
 ---
 

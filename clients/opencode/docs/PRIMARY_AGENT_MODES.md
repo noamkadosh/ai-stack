@@ -2,7 +2,10 @@
 
 OpenCode now has **5 primary agent modes**, each optimized for specific workflows. Switch between modes using Tab key or clicking the mode selector.
 
+> **Note**: For detailed agent delegation patterns and subagent usage, see [`AGENTS.md`](/docs/AGENTS.md).
+
 ---
+
 
 ## Overview
 

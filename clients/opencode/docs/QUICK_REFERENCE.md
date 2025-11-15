@@ -15,7 +15,7 @@
 - Server components default (App Router)
 - `'use client'` for interactivity
 - Props interface above component
-- Components <250 lines
+- Components <120 lines (body only)
 
 ### Backend (NestJS)
 - Controllers: thin, HTTP only

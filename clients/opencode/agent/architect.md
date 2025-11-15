@@ -247,6 +247,40 @@ Defense in Depth:
 4. Provide migration guide
 5. Sunset old version after grace period
 
+
+## Using Memory MCP
+
+**Before making architectural decisions, check Memory for existing patterns:**
+
+```typescript
+// Search for related decisions
+search_nodes({ query: "architecture decision", searchType: "type" })
+search_nodes({ query: "api design", searchType: "content" })
+```
+
+**Store all architectural decisions:**
+
+```typescript
+create_entities({
+  name: "decision_name",
+  entityType: "architecture_decision",
+  observations: [
+    "Decision: [what was decided]",
+    "Rationale: [why this approach]",
+    "Alternatives considered: [what was rejected and why]",
+    "Date: [YYYY-MM-DD]",
+    "Impact: [affected systems/components]"
+  ]
+})
+```
+
+**What to store:**
+- Technology stack choices
+- Design patterns to follow
+- System boundaries and responsibilities
+- API design standards
+- Cross-cutting concerns (auth, caching, error handling)
+
 ## Before Making Decisions
 
 1. Understand requirements fully

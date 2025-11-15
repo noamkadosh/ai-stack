@@ -240,20 +240,21 @@ opencode
 
 ### Agent System
 
-OpenCode is configured with 10 specialized agents (see `clients/opencode/agent/`):
+OpenCode is configured with 12 specialized subagents (see `clients/opencode/agent/`):
 - **architect** - System design and architecture decisions
 - **frontend** - React/Next.js component development
 - **backend** - NestJS/Node.js API development
-- **test-expert** - Testing strategies and automation
+- **test** - Testing strategies and automation
 - **infrastructure** - Docker/AWS deployment
 - **database** - PostgreSQL schema and queries
 - **documentation** - Technical documentation
-- **code-review** - Code quality and standards
+- **reviewer** - Code quality and standards
 - **debugger** - Troubleshooting and diagnosis
 - **security** - Security analysis and audits
+- **performance** - Performance optimization
+- **refactoring** - Code quality improvements
 
 Each agent has access to all MCP tools via the shared gateway.
-
 ### Custom Commands
 
 Eight slash commands are available (see `clients/opencode/command/`):

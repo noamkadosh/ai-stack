@@ -15,6 +15,11 @@ permission:
     "git status": allow
     "npm test*": allow
     "npm run test*": allow
+    "sed*": deny
+    "awk*": deny
+    "export*": deny
+    "alias*": deny
+    "unalias*": deny
     "rm -rf*": deny
     "*": ask
 ---

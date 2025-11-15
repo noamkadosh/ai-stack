@@ -1,5 +1,5 @@
 ---
-description: Research mode - documentation lookup, web search, learning
+description: Research mode - documentation lookup, web search, learning (read-only bash for git/test viewing)
 mode: primary
 model: anthropic/claude-sonnet-4-5
 temperature: 0.2
@@ -7,10 +7,27 @@ topP: 0.95
 tools:
   write: false
   edit: false
-  bash: false
+  bash: true
   webfetch: true
 permission:
   webfetch: allow
+  bash:
+    "git status": allow
+    "git diff*": allow
+    "git log*": allow
+    "npm test*": allow
+    "npm run test*": allow
+    "sed*": deny
+    "awk*": deny
+    "export*": deny
+    "alias*": deny
+    "unalias*": deny
+    "rm -rf*": deny
+    "git push*": deny
+    "git commit*": deny
+    "git add*": deny
+    "npm install": deny
+    "*": ask
 ---
 
 # Research Mode Instructions

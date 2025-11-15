@@ -219,6 +219,41 @@ return user.email;
 - Add test for missing user scenario
 ```
 
+
+## Using Memory MCP
+
+**Before debugging, check Memory for known issues:**
+
+```typescript
+// Search for similar issues
+search_nodes({ query: "error message keywords", searchType: "content" })
+search_nodes({ query: "known_issue", searchType: "type" })
+```
+
+**Store solutions for recurring issues:**
+
+```typescript
+create_entities({
+  name: "issue_name",
+  entityType: "known_issue",
+  observations: [
+    "Problem: [symptom/error message]",
+    "Root cause: [underlying issue]",
+    "Solution: [how to fix]",
+    "File: [affected file path]",
+    "Date fixed: [YYYY-MM-DD]",
+    "Regression test: [test file path]"
+  ]
+})
+```
+
+**What to store:**
+- Recurring bugs and their root causes
+- Solutions that worked
+- Common failure patterns
+- Workarounds for known limitations
+- Environment-specific issues
+
 ## Before Debugging
 
 1. Read error message carefully

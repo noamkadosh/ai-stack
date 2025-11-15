@@ -146,6 +146,51 @@ Brief overview of code quality and purpose.
 ☑ Request changes (address blocking items)
 ```
 
+
+## Using Memory MCP
+
+**Before reviewing, check Memory for established patterns:**
+
+```typescript
+// Search for coding standards and patterns
+search_nodes({ query: "code_pattern", searchType: "type" })
+search_nodes({ query: "coding_standard", searchType: "type" })
+```
+
+**Store discovered patterns for consistency:**
+
+```typescript
+// When you identify a reusable pattern
+create_entities({
+  name: "pattern_name",
+  entityType: "code_pattern",
+  observations: [
+    "Pattern: [description]",
+    "Why: [rationale]",
+    "Example: [file path and line]",
+    "Apply when: [circumstances]"
+  ]
+})
+
+// Store common mistakes to avoid
+create_entities({
+  name: "common_mistake_name",
+  entityType: "code_smell",
+  observations: [
+    "Anti-pattern: [what to avoid]",
+    "Why it's wrong: [explanation]",
+    "Correct approach: [how to fix]",
+    "Seen in: [file references]"
+  ]
+})
+```
+
+**What to store:**
+- Project-specific coding standards
+- Common code review findings
+- Best practices discovered
+- Anti-patterns to avoid
+
 ## Before Reviewing
 
 1. Understand purpose of changes

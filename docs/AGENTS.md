@@ -2,6 +2,9 @@
 
 This document explains the tech stack, code standards, and **how to effectively delegate work to specialized agents** in this project.
 
+> **Note**: For information on primary agent modes (build, plan, review, debug, research), see [`clients/opencode/docs/PRIMARY_AGENT_MODES.md`](../clients/opencode/docs/PRIMARY_AGENT_MODES.md).
+
+
 ## Tech Stack
 
 **Frontend**: TypeScript, React, NextJS, Storybook  
@@ -898,17 +901,17 @@ You (Main Agent)
 Escalate decisions upward when specialist's expertise is exceeded.
 
 ```
-Level 1: Domain Specialists (Implementation)
+```
+Level 1: Domain Implementation Specialists
 @frontend, @backend, @database, @test, @infrastructure, @documentation
-    ↓
-Level 2: Cross-Cutting Specialists (Analysis & Improvement)
-@reviewer (for code quality)
-@refactoring (for code improvement)
-@performance (for optimization)
-@security (for security issues)
-@debugger (for bugs/performance)
-@documentation (for docs)
-    ↓
+    ↓ (when encountering cross-cutting concerns)
+Level 2: Cross-Cutting Analysis Specialists
+@reviewer (code quality analysis)
+@refactoring (code improvement)
+@performance (optimization)
+@security (security analysis)
+@debugger (root cause analysis)
+    ↓ (when encountering architectural decisions)
 Level 3: Architecture Authority
 @architect
 (Final authority on all architectural decisions)
